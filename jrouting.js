@@ -570,6 +570,15 @@ jRouting.on('error', function (err, url, name) {
         self.errors.shift();
 });
 
+$.fn.jRouting = function() {
+    var handler = function(e) {
+        e.preventDefault();
+        jRouting.redirect($(this).attr('href'));
+    };
+    this.filter('a').bind('click', handler);
+    return this;
+};
+
 $(document).ready(function() {
     var url = window.location.hash || '';
     if (url.length === 0)
@@ -583,3 +592,4 @@ $(document).ready(function() {
         jRouting.emit('load', current);
     }
 });
+
