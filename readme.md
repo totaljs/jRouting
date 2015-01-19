@@ -230,7 +230,7 @@ jRouting.on('error', function(error, url, description) {
 
 #### jRouting.on('status')
 
-> Captures the HTTP status.
+> Captures a HTTP error.
 
 ```js
 jRouting.on('status', function(code, message) {
