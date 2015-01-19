@@ -1,11 +1,10 @@
-"use strict";
-
 var LIMIT_HISTORY = 100;
 var LIMIT_HISTORY_ERROR = 100;
 var JRFU = {};
 
 var jRouting = {
     version: 101,
+    cache: {},
     routes: [],
     history: [],
     errors: [],
@@ -256,8 +255,17 @@ jRouting.location = function(url, isRefresh) {
     var isError = false;
     var error = [];
 
+    // cache old repository
+
+    if (self.url.length > 0)
+        self.cache[self.url] = self.repository;
+
     self.url = url;
-    self.repository = {};
+    self.repository = self.cache[url];
+
+    if (self.repository === undefined)
+        self.repository = {};
+
     self._params();
 
     self.emit('location', url);
@@ -592,4 +600,3 @@ $(document).ready(function() {
         jRouting.emit('load', current);
     }
 });
-
