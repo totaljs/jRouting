@@ -1,3 +1,4 @@
+[![MIT License][license-image]][license-url]
 # jRouting
 
 The library supports the HTML 5 History API only. __This plugin is a little big cannon for the web development__. Works only with jQuery.
