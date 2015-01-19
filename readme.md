@@ -9,6 +9,7 @@ The library supports the HTML 5 History API only. __This plugin is a little big 
 - no dependencies
 - best of use with [www.totaljs.com - web application framework for node.js](http://www.totaljs.com)
 - [__DEMO EXAMPLE__](http://clientside.totaljs.com/jrouting.html)
+- [__IMPORTANT: jComponent + Tangular + jRouting__](http://clientside.totaljs.com/jctajr.html)
 
 __MUST SEE:__
 
