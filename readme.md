@@ -14,7 +14,7 @@ The library supports the HTML 5 History API only. __This plugin is a little big 
 - [__DEMO EXAMPLE__](http://clientside.totaljs.com/jrouting.html)
 - [__IMPORTANT DEMO: jComponent + Tangular + jRouting__ = jctajr.js](http://clientside.totaljs.com/jctajr.html)
 
-__MUST SEE:__
+__YOU MUST SEE:__
 
 - [jComponent](https://github.com/petersirka/jComponent)
 - [Tangular - A template engine like Angular.js](https://github.com/petersirka/Tangular)
