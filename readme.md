@@ -1,20 +1,20 @@
 # jRouting
 
-Framework supports the HTML 5 History API, for older browsers (IE8+) URL hashtag is automatically enabled. __This plugin is a little big cannon for the web development__. Works best with jQuery.
+The library supports the HTML 5 History API only. __This plugin is a little big cannon for the web development__. Works only with jQuery.
 
 - easy to use
-- minified only 9.5 kB (without GZIP compression)
+- minified only 6.6 kB (without GZIP compression)
 - great functionality
-- great use
-- works in IE 8+
+- works in IE 9+
 - no dependencies
-- [__DEMO EXAMPLE__](http://source.858project.com/partialjs-clientside.html)
+- best of use with [www.totaljs.com - web application framework for node.js](http://www.totaljs.com)
+- [__DEMO EXAMPLE__](http://clientside.totaljs.com/jrouting.html)
 
 __MUST SEE:__
 
+- [jComponent](https://github.com/petersirka/jComponent)
+- [Tangular - A template engine like Angular.js](https://github.com/petersirka/Tangular)
 - [jQuery two way bindings](https://github.com/petersirka/jquery.bindings)
-- [jQuery templating engine according to partial.js](https://github.com/petersirka/jquery.templates)
-- [Web application framework for node.js - partial.js](https://github.com/petersirka/partial.js)
 
 ## Simple example
 
@@ -23,29 +23,15 @@ __MUST SEE:__
 // DEFINE ROUTING
 // ===========================
 
-// framework === global variable
-
-jRouting.route('/homepage/', view_homepage, ['contact']);
-jRouting.route('/services/', view_services, ['contact']);
-jRouting.route('/contact/', view_contact, ['empty']);
-jRouting.route('/products/{category}/', view_products, ['latest']);
+// jRouting === global variable
+jRouting.route('/homepage/', view_homepage, init_homepage);
+jRouting.route('/products/{category}/', view_products, ['data']);
 
 // ===========================
-// DEFINE PARTIAL CONTENT
+// DEFINE MIDDLEWARE
 // ===========================
 
-jRouting.middleware('contact', function(next) {
-    $('#panel').html('PANEL CONTACT');
-    next();
-});
-
-jRouting.middleware('empty', function(next) {
-    $('#panel').html('PANEL EMPTY');
-    next();
-});
-
-jRouting.middleware('latest', function(next) {
-    $('#panel').html('PANEL LATEST');
+jRouting.middleware('data', function(next) {
     next();
 });
 
@@ -54,33 +40,24 @@ jRouting.middleware('latest', function(next) {
 // ===========================
 
 function view_homepage() {
+    var self = this;
+    // self === jRouting
     $('#content').html('HOMEPAGE');
 }
 
-function view_services() {
-    $('#content').html('SERVICES');
-}
-
-function view_contact() {
-    $('#content').html('CONTACT');
+function init_homepage(next) {
+    // is executed one time
+    next();
 }
 
 function view_products(category) {
+    // self === jRouting
 	$('#content').html('PRODUCTS –> ' + category);
 }
 
 // ===========================
 // DEFINE EVENTS
 // ===========================
-
-jRouting.on('ready', function() {
-    $('.menu').on('click', 'a', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        jRouting.redirect($(this).attr('href'));
-    });
-    jRouting.redirect('/homepage/');
-});
 
 jRouting.on('location', function(url) {
      var menu = $('.menu');
@@ -90,10 +67,6 @@ jRouting.on('location', function(url) {
 ```
 
 ## Properties
-
-#### jRouting.isModernBrowser;
-
-> {Boolean} - Supports browser HistoryAPI?
 
 #### jRouting.url;
 
@@ -138,10 +111,10 @@ jRouting.global.name = 'partial.js';
 
 #### jRouting.repository;
 
-> {Empty Object} - Temporary object for the current location. After redirecting is the repository object cleared.
+> {Empty Object} - A temporary object for the current location. This property remembers last state for the URL.
 
 ```js
-jRouting.repository.title = 'partial.js title';
+jRouting.repository.title = 'jRouting';
 ```
 
 #### jRouting.model;
@@ -149,64 +122,48 @@ jRouting.repository.title = 'partial.js title';
 > {Object} - model for the current location.
 
 ```js
-jRouting.redirect('/new-url/', { name: 'partial.js '});
+jRouting.redirect('/new-url/', { name: 'jRouting '});
 
 // --> view
 
 function view_new_url() {
-	// this === framework
 	var self = this;
-	console.log(self.model);
+	console.log(self.model); // --> model.name: jRouting
 }
 ```
 
-#### jRouting.isReady;
+#### jRouting.query;
 
-> {Boolean} - Is framework ready??
-
-```js
-console.log(jRouting.isReady);
-```
-
-#### jRouting.isRefresh;
-
-> {Boolean} - Is refresh?
+> {Object} - Get the current params from the URL address (url -> query). After redirect or refresh are params re-loaded.
 
 ```js
-function view() {
-	var self = this;
-	// --> self.refresh();
-	console.log(self.isRefresh);
-}
-```
-
-#### jRouting.get;
-
-> {Object} - Current (GET) params from URL address (url -> query). After redirect or refresh are params re-loaded.
-
-```js
-// ---> /current-page/?q=partial.js
-console.log(jRouting.get.q);
+// ---> /current-page/?q=jComponent
+console.log(jRouting.query.q);
 ```
 
 ## Methods
 
-#### jRouting.route(path, fn, [partials], [once])
+#### jRouting.route(path, fn, [middleware], [init])
 
 > Create a route.
 
 ```js
 jRouting.route('/', view_homepage);
-jRouting.route('/products/{category}/', view_products, ['latest']);
+jRouting.route('/products/{category}/', view_products, ['middleware']);
+jRouting.route('/products/{category}/', view_products, ['middleware'], function(next) {
+    // initialization function
+    next();
+});
 ```
 
-#### jRouting.partial(name, fn)
+#### jRouting.middleware(name, fn)
 
-> Create a partial content
+> Create a middleware
 
 ```js
-jRouting.partial('latest', function() {
-	console.log('latest products');
+jRouting.partial('latest', function(next) {
+    // continue
+	next();
 });
 ```
 
@@ -224,7 +181,7 @@ jRouting.redirect('/products/shoes/', { from: 'jeans', latest: true, custom: 'mo
 
 #### jRouting.back()
 
-> History back.
+> Goes back to previous URL.
 
 ```js
 jRouting.back();
@@ -232,7 +189,7 @@ jRouting.back();
 
 #### jRouting.refresh()
 
-> Refresh current page.
+> Refresh the current page.
 
 ```js
 jRouting.refresh();
@@ -242,7 +199,7 @@ jRouting.refresh();
 
 #### jRouting.on('ready')
 
-> Is framework ready?
+> Is the library ready?
 
 ```js
 jRouting.once('ready', funtion() {
@@ -253,7 +210,7 @@ jRouting.once('ready', funtion() {
 
 #### jRouting.on('location')
 
-> Capture a new location.
+> Captures a new location.
 
 ```js
 jRouting.on('location', function(url) {
@@ -263,7 +220,7 @@ jRouting.on('location', function(url) {
 
 #### jRouting.on('error')
 
-> Capture an error.
+> Captures some error.
 
 ```js
 jRouting.on('error', function(error, url, description) {
@@ -273,11 +230,10 @@ jRouting.on('error', function(error, url, description) {
 
 #### jRouting.on('status')
 
-> Capture an HTTP status.
+> Captures the HTTP status.
 
 ```js
 jRouting.on('status', function(code, message) {
-
 	switch (code) {
 		case 404:
 			console.log('NOT FOUND', message);
@@ -286,6 +242,5 @@ jRouting.on('status', function(code, message) {
 			console.log('INTERNAL ERROR', message);
 			break;
 	}
-
 });
 ```

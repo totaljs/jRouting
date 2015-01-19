@@ -11,7 +11,7 @@ var jRouting = {
     events: {},
     eventsOnce: {},
     global: {},
-    get: {},
+    query: {},
     middlewares: {},
     repository: {},
     url: '',
@@ -409,7 +409,7 @@ jRouting._params = function() {
             data[name] = value;
     }
 
-    self.get = data;
+    self.query = data;
     return self;
 };
 
