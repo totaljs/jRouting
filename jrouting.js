@@ -345,13 +345,6 @@ jRouting.status = function(code, message) {
 
 jRouting.redirect = function(url, model) {
     var self = this;
-
-    if (!self.isModernBrowser) {
-        window.location.href = '#!' + JRFU.path(url);
-        self.model = model || null;
-        return self;
-    }
-
     self.isSkip = true;
     history.pushState(null, null, url);
     self.model = model || null;
@@ -486,35 +479,6 @@ $(window).bind('popstate', function() {
     jRouting.location(JRFU.path(url));
 });
 
-
-
-$(window).bind('hashchange', function() {
-    if (!jRouting.isReady)
-        return;
-    var url = window.location.hash || '';
-    if (url.length === 0)
-        url = window.location.pathname;
-    jRouting.location(JRFU.path(url));
-});
-
-if (navigator.appVersion.match(/MSIE.7|MSIE.8/) !== null) {
-    setInterval(function() {
-
-        if (!jRouting.isReady)
-            return;
-
-        var url = window.location.hash || '';
-        if (url.length === 0)
-            url = window.location.pathname;
-
-        url = JRFU.path(url);
-
-        if (url !== jRouting.url)
-            jRouting.location(url);
-
-    }, 500);
-}
-
 if (!String.prototype.trim) {
     String.prototype.trim = function () {
         return this.replace(/^[\s]+|[\s]+$/g, '');
@@ -564,11 +528,9 @@ JRFU.path = function (url, d) {
 };
 
 JRFU.prepareUrl = function(url) {
-
-    var index = url.indexOf('#!');
+    index = url.indexOf('#');
     if (index !== -1)
-        return url.substring(index + 2);
-
+        return url.substring(0, index);
     return url;
 };
 
@@ -611,9 +573,7 @@ $.fn.jRouting = function() {
 };
 
 $(document).ready(function() {
-    var url = window.location.hash || '';
-    if (url.length === 0)
-        url = window.location.pathname;
+    var url = window.location.pathname;
     jRouting.isReady = true;
     if (typeof(jRouting.events['ready']) === 'undefined')
         jRouting.location(JRFU.path(JRFU.prepareUrl(url)));
