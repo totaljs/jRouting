@@ -267,7 +267,6 @@ jRouting.location = function(url, isRefresh) {
         var route = routes[i];
 
         if (!route.middleware || route.middleware.length === 0) {
-            console.log(route);
             route.fn.apply(self, self._route_param(path, route));
             continue;
         }
