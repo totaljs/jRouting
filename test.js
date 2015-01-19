@@ -1,10 +1,11 @@
-framework.partial('header', function() {
+jRouting.middleware('header', function(next) {
 	console.log('header');
+    next();
 });
 
-framework.route('/', view_homepage);
-framework.route('/*', view_panel, ['header']);
-framework.route('/products/', view_products);
+jRouting.route('/', view_homepage);
+jRouting.route('/*', view_panel, ['header']);
+jRouting.route('/products/', view_products);
 
 function view_homepage() {
 	var self = this;
@@ -19,14 +20,10 @@ function view_panel() {
 	console.log('panel');
 };
 
-framework.on('error', function(error, url) {
+jRouting.on('error', function(error, url) {
 	console.log(error);
 });
 
-framework.on('404', function(url) {
+jRouting.on('404', function(url) {
 	console.log('NOT FOUND --->', url);
-});
-
-$(document).ready(function() {
-	framework.location('/');
 });
