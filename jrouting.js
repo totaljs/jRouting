@@ -90,7 +90,7 @@ jRouting.emit = function(name) {
     @once {Boolean} :: optional, default false
     return {Framework}
 */
-jRouting.route = function(url, fn, middleware, once) {
+jRouting.route = function(url, fn, middleware, init) {
 
     var tmp;
 
@@ -100,16 +100,16 @@ jRouting.route = function(url, fn, middleware, once) {
         fn = tmp;
     }
 
+    if (typeof(middleware) === 'function') {
+        tmp = init;
+        init = middleware;
+        middleware = tmp;
+    }
+
     var self = this;
     var priority = url.count('/') + (url.indexOf('*') === -1 ? 0 : 10);
     var route = self._route(url.trim());
     var params = [];
-
-    if (typeof(middleware) === 'boolean') {
-        tmp = once;
-        once = middleware;
-        middleware = tmp;
-    }
 
     if (typeof(middleware) === 'string')
         middleware = middleware.split(',');
@@ -124,7 +124,7 @@ jRouting.route = function(url, fn, middleware, once) {
         priority -= params.length;
     }
 
-    self.routes.push({ url: route, fn: fn, priority: priority, params: params, middleware: middleware || null, once: once, count: 0 });
+    self.routes.push({ url: route, fn: fn, priority: priority, params: params, middleware: middleware || null, init: init, count: 0, once: false });
 
     self.routes.sort(function(a, b) {
         if (a.priority > b.priority)
@@ -275,7 +275,19 @@ jRouting.location = function(url, isRefresh) {
         var route = routes[i];
 
         if (!route.middleware || route.middleware.length === 0) {
-            route.fn.apply(self, self._route_param(path, route));
+
+            if (!route.init) {
+                route.fn.apply(self, self._route_param(path, route));
+                continue;
+            }
+
+            (function(route) {
+                route.init(function() {
+                    route.init = null;
+                    route.fn.apply(self, self._route_param(path, route));
+                });
+            })(route);
+
             continue;
         }
 
@@ -292,8 +304,18 @@ jRouting.location = function(url, isRefresh) {
                 })(route, jRouting.middlewares[route.middleware[j]]);
             }
 
-            middleware.async(function() {
-                route.fn.apply(self, self._route_param(path, route));
+            if (!route.init) {
+                middleware.async(function() {
+                    route.fn.apply(self, self._route_param(path, route));
+                });
+                return;
+            }
+
+            route.init(function() {
+                route.init = null;
+                middleware.async(function() {
+                    route.fn.apply(self, self._route_param(path, route));
+                });
             });
 
         })(route);
@@ -304,6 +326,7 @@ jRouting.location = function(url, isRefresh) {
 
     if (notfound)
         self.status(404, new Error('Route not found.'));
+
 };
 
 jRouting.back = function() {
