@@ -145,7 +145,11 @@ jRouting.middleware = function(name, fn) {
 
 jRouting.refresh = function() {
     var self = this;
-    return self.location(self, true);
+    return self.location(self.url, true);
+};
+
+jRouting.reload = function() {
+    return jRouting.refresh();
 };
 
 jRouting._route = function(url) {
