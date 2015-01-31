@@ -115,12 +115,11 @@ jRouting.route = function(url, fn, middleware, init) {
         middleware = middleware.split(',');
 
     if (url.indexOf('{') !== -1) {
-
+        priority += 100;
         for (var i = 0; i < route.length; i++) {
             if (route[i].substring(0, 1) === '{')
                 params.push(i);
         }
-
         priority -= params.length;
     }
 
