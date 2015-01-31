@@ -144,7 +144,11 @@ jRouting.middleware = function(name, fn) {
 
 jRouting.refresh = function() {
     var self = this;
-    return self.location(self, true);
+    return self.location(self.url, true);
+};
+
+jRouting.reload = function() {
+    return jRouting.refresh();
 };
 
 jRouting._route = function(url) {
@@ -345,10 +349,15 @@ jRouting.status = function(code, message) {
 jRouting.redirect = function(url, model) {
     var self = this;
     self.isSkip = true;
+
+    if (!self.isModernBrowser) {
+        window.location.href = url;
+        return false;
+    }
+
     history.pushState(null, null, url);
     self.model = model || null;
     self.location(url, false);
-
     return self;
 };
 
@@ -563,6 +572,8 @@ jRouting.on('error', function (err, url, name) {
 });
 
 $.fn.jRouting = function() {
+    if (!jRouting.isModernBrowser)
+        return this;
     var handler = function(e) {
         e.preventDefault();
         jRouting.redirect($(this).attr('href'));
