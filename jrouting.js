@@ -477,11 +477,12 @@ if (!Array.prototype.indexOf) {
 
 $(window).bind('popstate', function() {
 
+/*
     if (jRouting.count === 1 || jRouting.isSkip) {
         jRouting.isSkip = false;
         return;
     }
-
+*/
     var url = window.location.hash || '';
     if (url.length === 0)
         url = window.location.pathname;
