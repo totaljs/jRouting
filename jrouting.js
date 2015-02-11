@@ -19,7 +19,7 @@ var jRouting = {
     isFirst: true,
     isReady: false,
     isRefresh: false,
-    isSkip: false,
+    isSkip: true,
     isModernBrowser: typeof(history.pushState) !== 'undefined',
     count: 0
 };
@@ -477,12 +477,11 @@ if (!Array.prototype.indexOf) {
 
 $(window).bind('popstate', function() {
 
-/*
-    if (jRouting.count === 1 || jRouting.isSkip) {
+    if (jRouting.isSkip) {
         jRouting.isSkip = false;
         return;
     }
-*/
+
     var url = window.location.hash || '';
     if (url.length === 0)
         url = window.location.pathname;
