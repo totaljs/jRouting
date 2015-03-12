@@ -3,7 +3,7 @@ var LIMIT_HISTORY_ERROR = 100;
 var JRFU = {};
 
 var jRouting = {
-    version: 101,
+    version: 102,
     cache: {},
     routes: [],
     history: [],
@@ -82,14 +82,6 @@ jRouting.emit = function(name) {
 
 };
 
-/*
-    Route
-    @url {String}
-    @fn {Function}
-    @partial {String Array} :: optional
-    @once {Boolean} :: optional, default false
-    return {Framework}
-*/
 jRouting.route = function(url, fn, middleware, init) {
 
     var tmp;
@@ -123,7 +115,7 @@ jRouting.route = function(url, fn, middleware, init) {
         priority -= params.length;
     }
 
-    self.routes.push({ url: route, fn: fn, priority: priority, params: params, middleware: middleware || null, init: init, count: 0, once: false });
+    self.routes.push({ url: route, fn: fn, priority: priority, params: params, middleware: middleware || null, init: init, count: 0, pending: false });
 
     self.routes.sort(function(a, b) {
         if (a.priority > b.priority)
@@ -278,20 +270,25 @@ jRouting.location = function(url, isRefresh) {
     for (var i = 0; i < length; i++) {
         var route = routes[i];
 
-        if (!route.middleware || route.middleware.length === 0) {
+        if (route.pending)
+            continue;
 
+        if (!route.middleware || route.middleware.length === 0) {
             if (!route.init) {
                 route.fn.apply(self, self._route_param(path, route));
                 continue;
             }
 
+            route.pending = true;
+
             (function(route) {
                 route.init(function() {
-                    route.init = null;
                     route.fn.apply(self, self._route_param(path, route));
+                    route.pending = false;
                 });
             })(route);
 
+            route.init = null;
             continue;
         }
 
@@ -309,19 +306,23 @@ jRouting.location = function(url, isRefresh) {
             }
 
             if (!route.init) {
+                route.pending = true;
                 middleware.async(function() {
                     route.fn.apply(self, self._route_param(path, route));
+                    route.pending = false;
                 });
                 return;
             }
 
+            route.pending = true;
             route.init(function() {
-                route.init = null;
                 middleware.async(function() {
                     route.fn.apply(self, self._route_param(path, route));
+                    route.pending = false;
                 });
             });
 
+            route.init = null;
         })(route);
     }
 
