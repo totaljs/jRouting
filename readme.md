@@ -165,7 +165,7 @@ jRouting.route('/products/{category}/', view_products, ['middleware'], function(
 > Create a middleware
 
 ```js
-jRouting.partial('latest', function(next) {
+jRouting.middleware('latest', function(next) {
     // continue
 	next();
 });
@@ -182,6 +182,15 @@ jRouting.redirect('/products/shoes/');
 
 jRouting.redirect('/products/shoes/', { from: 'jeans', latest: true, custom: 'model' });
 ```
+
+#### jRouting.prev()
+
+> Returns the previouse URL address.
+ 
+```javascript
+console.log(jRouting.prev());
+```
+
 
 #### jRouting.back()
 

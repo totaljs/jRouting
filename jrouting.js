@@ -333,6 +333,11 @@ jRouting.location = function(url, isRefresh) {
 
 };
 
+jRouting.prev = function() {
+    var self = this;
+    return self.history[self.history.length - 1];
+};
+
 jRouting.back = function() {
     var self = this;
     var url = self.history.pop() || '/';
