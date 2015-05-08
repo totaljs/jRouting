@@ -3,7 +3,7 @@ var LIMIT_HISTORY_ERROR = 100;
 var JRFU = {};
 
 var jRouting = {
-    version: 102,
+    version: 103,
     cache: {},
     routes: [],
     history: [],
@@ -570,14 +570,20 @@ jRouting.on('error', function (err, url, name) {
         self.errors.shift();
 });
 
-$.fn.jRouting = function() {
+$.fn.jRouting = function(g) {
     if (!jRouting.isModernBrowser)
         return this;
     var handler = function(e) {
         e.preventDefault();
         jRouting.redirect($(this).attr('href'));
     };
-    this.filter('a').bind('click', handler);
+
+    if (!g) {
+        this.filter('a').bind('click', handler);
+        return this;
+    }
+
+    $(document).on('click', this.selector, handler);
     return this;
 };
 

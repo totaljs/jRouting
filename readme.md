@@ -258,6 +258,14 @@ jRouting.on('status', function(code, message) {
 });
 ```
 
+## Assign links to jRouting
+
+```javascript
+$('a.jrouting').jRouting();
+// or
+$('a.jrouting').jRouting(true); // for dynamic content
+```
+
 ## Contact
 
 Peter Širka - www.petersirka.eu / <petersirka@gmail.com>
