@@ -14,7 +14,7 @@ The library supports the HTML 5 History API only. __This plugin is a little big 
 
 __YOU MUST SEE:__
 
-- [jComponent](https://github.com/petersirka/jComponent)
+- [jComponent - A component library for jQuery](https://github.com/petersirka/jComponent)
 - [Tangular - A template engine like Angular.js](https://github.com/petersirka/Tangular)
 - [jQuery two way bindings](https://github.com/petersirka/jquery.bindings)
 
