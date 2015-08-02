@@ -3,16 +3,14 @@
 
 The library supports the HTML 5 History API only. __This plugin is a little big cannon for the web development__. Works only with jQuery.
 
-- license __MIT__
-- easy to use
-- minified only 6.6 kB (without GZIP compression)
-- great functionality
-- works in `IE 9+`
 - `>= jQuery +1.7`
+- works in `IE 9+`
+- easy to use
+- minified only 3 kB
+- great functionality
 - no dependencies
 - best of use with [www.totaljs.com - web application framework for node.js](http://www.totaljs.com)
-- [__DEMO EXAMPLE__](http://clientside.totaljs.com/jrouting.html)
-- [__IMPORTANT DEMO: jComponent + Tangular + jRouting__ = jctajr.js](http://clientside.totaljs.com/jctajr.html)
+- [__DEMO EXAMPLE__](http://example.jcomponent.org)
 
 __YOU MUST SEE:__
 
