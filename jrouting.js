@@ -306,7 +306,7 @@ jRouting.location = function(url, isRefresh) {
 
             if (!route.init) {
                 route.pending = true;
-                middleware.async(function() {
+                middleware.middleware(function() {
                     route.fn.apply(self, self._route_param(path, route));
                     route.pending = false;
                 });
@@ -315,7 +315,7 @@ jRouting.location = function(url, isRefresh) {
 
             route.pending = true;
             route.init(function() {
-                middleware.async(function() {
+                middleware.middleware(function() {
                     route.fn.apply(self, self._route_param(path, route));
                     route.pending = false;
                 });
@@ -541,8 +541,8 @@ JRFU.prepareUrl = function(url) {
     return url;
 };
 
-if (!Array.prototype.async) {
-    Array.prototype.async = function(callback) {
+if (!Array.prototype.middleware) {
+    Array.prototype.middleware = function(callback) {
 
         var self = this;
         var item = self.shift();
@@ -555,7 +555,7 @@ if (!Array.prototype.async) {
 
         item(function() {
             setTimeout(function() {
-                self.async(callback);
+                self.middleware(callback);
             }, 1);
         });
 
