@@ -143,7 +143,6 @@ jRouting.reload = function() {
 };
 
 jRouting._route = function(url) {
-	url = url.toLowerCase();
 
 	if (url.charIndex(0) === '/')
 		url = url.substring(1);
@@ -217,6 +216,12 @@ jRouting.location = function(url, isRefresh) {
 	var path = self._route(url);
 	var routes = [];
 	var notfound = true;
+	var raw = [];
+
+	raw.push.apply(raw, path);
+
+	for (var i = 0, length = path.length; i < length; i++)
+		path[i] = path[i].toLowerCase();
 
 	self.isRefresh = isRefresh || false;
 	self.count++;
@@ -274,7 +279,7 @@ jRouting.location = function(url, isRefresh) {
 
 		if (!route.middleware || route.middleware.length === 0) {
 			if (!route.init) {
-				route.fn.apply(self, self._route_param(path, route));
+				route.fn.apply(self, self._route_param(raw, route));
 				continue;
 			}
 
@@ -282,7 +287,7 @@ jRouting.location = function(url, isRefresh) {
 
 			(function(route) {
 				route.init(function() {
-					route.fn.apply(self, self._route_param(path, route));
+					route.fn.apply(self, self._route_param(raw, route));
 					route.pending = false;
 				});
 			})(route);
@@ -307,7 +312,7 @@ jRouting.location = function(url, isRefresh) {
 			if (!route.init) {
 				route.pending = true;
 				middleware.middleware(function() {
-					route.fn.apply(self, self._route_param(path, route));
+					route.fn.apply(self, self._route_param(raw, route));
 					route.pending = false;
 				});
 				return;
@@ -316,7 +321,7 @@ jRouting.location = function(url, isRefresh) {
 			route.pending = true;
 			route.init(function() {
 				middleware.middleware(function() {
-					route.fn.apply(self, self._route_param(path, route));
+					route.fn.apply(self, self._route_param(raw, route));
 					route.pending = false;
 				});
 			});
