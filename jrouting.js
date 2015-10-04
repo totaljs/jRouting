@@ -12,6 +12,7 @@ var jRouting = {
 	eventsOnce: {},
 	global: {},
 	query: {},
+	params: [],
 	middlewares: {},
 	repository: {},
 	url: '',
@@ -279,7 +280,8 @@ jRouting.location = function(url, isRefresh) {
 
 		if (!route.middleware || route.middleware.length === 0) {
 			if (!route.init) {
-				route.fn.apply(self, self._route_param(raw, route));
+				self.params = self._route_param(raw, route);
+				route.fn.apply(self, self.params);
 				continue;
 			}
 
@@ -287,7 +289,8 @@ jRouting.location = function(url, isRefresh) {
 
 			(function(route) {
 				route.init(function() {
-					route.fn.apply(self, self._route_param(raw, route));
+					self.params = self._route_param(raw, route);
+					route.fn.apply(self, self.params);
 					route.pending = false;
 				});
 			})(route);
@@ -312,7 +315,8 @@ jRouting.location = function(url, isRefresh) {
 			if (!route.init) {
 				route.pending = true;
 				middleware.middleware(function() {
-					route.fn.apply(self, self._route_param(raw, route));
+					self.params = self._route_param(raw, route);
+					route.fn.apply(self, self.params);
 					route.pending = false;
 				});
 				return;
@@ -321,7 +325,8 @@ jRouting.location = function(url, isRefresh) {
 			route.pending = true;
 			route.init(function() {
 				middleware.middleware(function() {
-					route.fn.apply(self, self._route_param(raw, route));
+					self.params = self._route_param(raw, route);
+					route.fn.apply(self, self.params);
 					route.pending = false;
 				});
 			});
@@ -458,49 +463,14 @@ JRFU.path = function (url, d) {
 	return url + params;
 };
 
-/*
-	@cb {Function}
-*/
-if (!Array.prototype.forEach) {
-	Array.prototype.forEach = function (cb) {
-		var arr = this;
-		for (var i = 0; i < arr.length; i++)
-			cb(arr[i], i);
-		return arr;
-	};
-}
-
-/*
-	@cb {Function} :: return index
-*/
-if (!Array.prototype.indexOf) {
-	Array.prototype.indexOf = function (value) {
-		var arr = this;
-		for (var i = 0; i < arr.length; i++) {
-			if (value === arr[i])
-				return i;
-		}
-		return -1;
-	};
-}
-
-if (!String.prototype.trim) {
-	String.prototype.trim = function () {
-		return this.replace(/^[\s]+|[\s]+$/g, '');
-	};
-}
-
 if (!String.prototype.count) {
 	String.prototype.count = function(text) {
 		var index = 0;
 		var count = 0;
 		do {
-
 			index = this.indexOf(text, index + text.length);
-
 			if (index > 0)
 				count++;
-
 		} while (index > 0);
 		return count;
 	};
