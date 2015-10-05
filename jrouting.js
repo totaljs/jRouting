@@ -206,6 +206,9 @@ jRouting._route_compare = function(url, route) {
 
 jRouting.location = function(url, isRefresh) {
 
+	if (!jRouting.isReady)
+		return;
+
 	var index = url.indexOf('?');
 	if (index !== -1)
 		url = url.substring(0, index);
@@ -268,6 +271,7 @@ jRouting.location = function(url, isRefresh) {
 		self.repository = {};
 
 	self._params();
+	self.params = self._route_param(raw, route);
 
 	self.emit('location', url);
 	length = routes.length;
@@ -280,7 +284,6 @@ jRouting.location = function(url, isRefresh) {
 
 		if (!route.middleware || route.middleware.length === 0) {
 			if (!route.init) {
-				self.params = self._route_param(raw, route);
 				route.fn.apply(self, self.params);
 				continue;
 			}
@@ -289,7 +292,6 @@ jRouting.location = function(url, isRefresh) {
 
 			(function(route) {
 				route.init(function() {
-					self.params = self._route_param(raw, route);
 					route.fn.apply(self, self.params);
 					route.pending = false;
 				});
@@ -315,7 +317,6 @@ jRouting.location = function(url, isRefresh) {
 			if (!route.init) {
 				route.pending = true;
 				middleware.middleware(function() {
-					self.params = self._route_param(raw, route);
 					route.fn.apply(self, self.params);
 					route.pending = false;
 				});
@@ -325,7 +326,6 @@ jRouting.location = function(url, isRefresh) {
 			route.pending = true;
 			route.init(function() {
 				middleware.middleware(function() {
-					self.params = self._route_param(raw, route);
 					route.fn.apply(self, self.params);
 					route.pending = false;
 				});
@@ -539,8 +539,10 @@ jRouting.on('error', function (err, url, name) {
 });
 
 $.fn.jRouting = function(g) {
+
 	if (!jRouting.isModernBrowser)
 		return this;
+
 	var handler = function(e) {
 		e.preventDefault();
 		jRouting.redirect($(this).attr('href'));
@@ -557,11 +559,12 @@ $.fn.jRouting = function(g) {
 
 $(document).ready(function() {
 	var url = window.location.pathname;
+
 	if (!jRouting.events.ready) {
-		jRouting.location(JRFU.path(JRFU.prepareUrl(url)));
 		setTimeout(function() {
 			jRouting.isReady = true;
-		}, 100);
+			jRouting.location(JRFU.path(JRFU.prepareUrl(url)));
+		}, 5);
 	} else {
 		var current = JRFU.path(JRFU.prepareUrl(url));
 		jRouting.emit('ready', current);
