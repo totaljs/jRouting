@@ -340,7 +340,6 @@ jRouting.location = function(url, isRefresh) {
 
 	if (notfound)
 		self.status(404, new Error('Route not found.'));
-
 };
 
 jRouting.prev = function() {
@@ -559,16 +558,18 @@ $.fn.jRouting = function(g) {
 
 $(document).ready(function() {
 	var url = window.location.pathname;
+	jRouting.url = JRFU.path(JRFU.prepareUrl(url));
 
 	if (!jRouting.events.ready) {
 		setTimeout(function() {
 			jRouting.isReady = true;
-			jRouting.location(JRFU.path(JRFU.prepareUrl(url)));
+			jRouting.location(jRouting.url);
+			jRouting.emit('ready', jRouting.url);
+			jRouting.emit('load', jRouting.url);
 		}, 5);
 	} else {
-		var current = JRFU.path(JRFU.prepareUrl(url));
-		jRouting.emit('ready', current);
-		jRouting.emit('load', current);
+		jRouting.emit('ready', jRouting.url);
+		jRouting.emit('load', jRouting.url);
 	}
 
 	$(window).on('popstate', function() {
