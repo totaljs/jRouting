@@ -1,9 +1,8 @@
-var LIMIT_HISTORY = 100;
-var LIMIT_HISTORY_ERROR = 100;
 var JRFU = {};
-
 var jRouting = {
-	version: 105,
+	LIMIT_HISTORY: 100,
+	LIMIT_HISTORY_ERROR: 100,
+	version: 'v1.0.6',
 	cache: {},
 	routes: [],
 	history: [],
@@ -60,7 +59,7 @@ jRouting.emit = function(name) {
 	var length = events.length;
 	var lengthOnce = eventsOnce.length;
 
-	if (length === 0 && lengthOnce === 0)
+	if (!length && !lengthOnce)
 		return self;
 
 	var params = [];
@@ -74,7 +73,7 @@ jRouting.emit = function(name) {
 			events[i].apply(self, params);
 	}
 
-	if (lengthOnce > 0) {
+	if (lengthOnce) {
 		for (var i = 0; i < length; i++)
 			eventsOnce[i].apply(self, params);
 		delete self.eventsOnce[name];
@@ -165,7 +164,7 @@ jRouting._route_param = function(routeUrl, route) {
 		return arr;
 
 	var length = route.params.length;
-	if (length === 0)
+	if (!length)
 		return arr;
 
 	for (var i = 0; i < length; i++) {
@@ -231,9 +230,9 @@ jRouting.location = function(url, isRefresh) {
 	self.count++;
 
 	if (!isRefresh) {
-		if (self.url.length > 0 && self.history[self.history.length - 1] !== self.url) {
+		if (self.url.length && self.history[self.history.length - 1] !== self.url) {
 			self.history.push(self.url);
-			if (self.history.length > LIMIT_HISTORY)
+			if (self.history.length > self.LIMIT_HISTORY)
 				self.history.shift();
 		}
 	}
@@ -533,7 +532,7 @@ if (!Array.prototype.middleware) {
 jRouting.on('error', function (err, url, name) {
 	var self = this;
 	self.errors.push({ error: err, url: url, name: name, date: new Date() });
-	if (self.errors.length > LIMIT_HISTORY_ERROR)
+	if (self.errors.length > self.LIMIT_HISTORY_ERROR)
 		self.errors.shift();
 });
 
@@ -557,6 +556,7 @@ $.fn.jRouting = function(g) {
 };
 
 $(document).ready(function() {
+
 	var url = window.location.pathname;
 	jRouting.url = JRFU.path(JRFU.prepareUrl(url));
 
