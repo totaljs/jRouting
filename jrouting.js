@@ -3,7 +3,7 @@ var LIMIT_HISTORY_ERROR = 100;
 var JRFU = {};
 
 var jRouting = {
-	version: 104,
+	version: 105,
 	cache: {},
 	routes: [],
 	history: [],
@@ -481,7 +481,7 @@ if (!String.prototype.charIndex) {
 	};
 }
 
-JRFU.path = function (url, d) {
+jRouting.path = JRFU.path = function (url, d) {
 
 	if (typeof (d) === 'undefined')
 		d = '/';
