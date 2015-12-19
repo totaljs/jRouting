@@ -2,7 +2,7 @@ var JRFU = {};
 var jRouting = {
 	LIMIT_HISTORY: 100,
 	LIMIT_HISTORY_ERROR: 100,
-	version: 'v1.0.6',
+	version: 'v1.1.0',
 	cache: {},
 	routes: [],
 	history: [],
@@ -364,7 +364,7 @@ jRouting.redirect = function(url, model) {
 	var self = this;
 
 	if (!self.isModernBrowser) {
-		window.location.href = url;
+		location.href = url;
 		return false;
 	}
 
@@ -409,7 +409,7 @@ jRouting._params = function() {
 	var self = this;
 	var data = {};
 
-	var params = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+	var params = location.href.slice(location.href.indexOf('?') + 1).split('&');
 
 	for (var i = 0; i < params.length; i++) {
 
@@ -557,7 +557,7 @@ $.fn.jRouting = function(g) {
 
 $(document).ready(function() {
 
-	var url = window.location.pathname;
+	var url = location.pathname;
 	jRouting.url = JRFU.path(JRFU.prepareUrl(url));
 
 	if (!jRouting.events.ready) {
@@ -575,9 +575,9 @@ $(document).ready(function() {
 	$(window).on('popstate', function() {
 		if (!jRouting.isReady)
 			return;
-		var url = window.location.hash || '';
+		var url = location.hash || '';
 		if (url.length === 0)
-			url = window.location.pathname;
+			url = location.pathname;
 		jRouting.location(JRFU.path(url));
 	});
 });
