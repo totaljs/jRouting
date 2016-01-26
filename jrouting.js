@@ -2,7 +2,7 @@ var JRFU = {};
 var jRouting = {
 	LIMIT_HISTORY: 100,
 	LIMIT_HISTORY_ERROR: 100,
-	version: 'v1.1.0',
+	version: 'v1.2.0',
 	cache: {},
 	routes: [],
 	history: [],
@@ -151,7 +151,7 @@ jRouting._route = function(url) {
 		url = url.substring(0, url.length - 1);
 
 	var arr = url.split('/');
-	if (arr.length === 1 && arr[0] === '')
+	if (arr.length === 1 && !arr[0])
 		arr[0] = '/';
 
 	return arr;
@@ -281,7 +281,7 @@ jRouting.location = function(url, isRefresh) {
 		if (route.pending)
 			continue;
 
-		if (!route.middleware || route.middleware.length === 0) {
+		if (!route.middleware || !route.middleware.length) {
 			if (!route.init) {
 				route.fn.apply(self, self.params);
 				continue;
@@ -315,8 +315,9 @@ jRouting.location = function(url, isRefresh) {
 
 			if (!route.init) {
 				route.pending = true;
-				middleware.middleware(function() {
-					route.fn.apply(self, self.params);
+				middleware.middleware(function(err) {
+					if (!err)
+						route.fn.apply(self, self.params);
 					route.pending = false;
 				});
 				return;
@@ -325,7 +326,8 @@ jRouting.location = function(url, isRefresh) {
 			route.pending = true;
 			route.init(function() {
 				middleware.middleware(function() {
-					route.fn.apply(self, self.params);
+					if (!err)
+						route.fn.apply(self, self.params);
 					route.pending = false;
 				});
 			});
@@ -375,7 +377,7 @@ jRouting.redirect = function(url, model) {
 };
 
 jRouting.cookie = {
-	read: function (name) {
+	get: function (name) {
 		var arr = document.cookie.split(';');
 		for (var i = 0; i < arr.length; i++) {
 			var c = arr[i];
@@ -389,7 +391,7 @@ jRouting.cookie = {
 		}
 		return '';
 	},
-	write: function (name, value, expire) {
+	set: function (name, value, expire) {
 		var expires = '';
 		if (typeof (expire) === 'number') {
 			var date = new Date();
@@ -399,8 +401,8 @@ jRouting.cookie = {
 			expires = '; expires=' + expire.toGMTString();
 		document.cookie = name + '=' + value + expires + '; path=/';
 	},
-	remove: function (name) {
-		this.write(name, '', -1);
+	rem: function (name) {
+		this.set(name, '', -1);
 	}
 };
 
@@ -434,13 +436,6 @@ jRouting._params = function() {
 	return self;
 };
 
-
-/*
-	Get clean path
-	@url {String}
-	@d {String} :: delimiter, optional, default /
-	return {String}
-*/
 JRFU.path = function (url, d) {
 
 	if (typeof (d) === 'undefined')
@@ -519,7 +514,15 @@ if (!Array.prototype.middleware) {
 			return self;
 		}
 
-		item(function() {
+		item(function(err) {
+
+			if (err instanceof Error || err === false) {
+				// cancel
+				if (callback)
+					callback(err === false ? true : err);
+				return;
+			}
+
 			setTimeout(function() {
 				self.middleware(callback);
 			}, 1);
@@ -576,8 +579,10 @@ $(document).ready(function() {
 		if (!jRouting.isReady)
 			return;
 		var url = location.hash || '';
-		if (url.length === 0)
+		if (!url.length)
 			url = location.pathname;
 		jRouting.location(JRFU.path(url));
 	});
 });
+
+window.jR = jRouting;

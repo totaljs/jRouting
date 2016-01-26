@@ -35,6 +35,8 @@ jRouting.route('/products/{category}/', view_products, ['data']);
 
 jRouting.middleware('data', function(next) {
     next();
+    // next(new Error('Some error'))
+    // IMPORTANT: jRouting won't execute any next middleware and a target route
 });
 
 // ===========================
@@ -262,6 +264,26 @@ jRouting.on('status', function(code, message) {
 $('a.jrouting').jRouting();
 // or
 $('a.jrouting').jRouting(true); // for dynamic content
+```
+
+#### Cookies
+
+```javascript
+jRouting.cookie.get('cookie_name');
+
+jRouting.cookie.set('cookie_name', 'cookie_value', expiration);
+// {Number} expiration = method sets days for the expiration
+// {Date} expiration
+
+jRouting.cookie.rem('cookie_name');
+```
+
+## Alias: jRouting is too long as word
+
+```javascript
+// use alias:
+// jR === jRouting
+jR.route('/', ...);
 ```
 
 ## Contact
