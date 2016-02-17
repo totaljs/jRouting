@@ -23,6 +23,11 @@ var jRouting = {
 	count: 0
 };
 
+if (!window.jRouting)
+	window.jRouting = jRouting;
+if (!window.JRFU)
+	window.JRFU = JRFU;
+
 jRouting.on = function(name, fn) {
 	var self = this;
 
