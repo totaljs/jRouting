@@ -30,6 +30,11 @@ __YOU MUST SEE:__
 jRouting.route('/homepage/', view_homepage, init_homepage);
 jRouting.route('/products/{category}/', view_products, ['data']);
 
+// Supports HASHTAG routes
+jRouting.route('#users', view_homepage, init_homepage);
+jRouting.route('#products', view_homepage, init_homepage);
+// jRouting.redirect('#users');
+
 // ===========================
 // DEFINE MIDDLEWARE
 // ===========================
