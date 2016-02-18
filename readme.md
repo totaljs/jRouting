@@ -10,6 +10,7 @@ The library supports the HTML 5 History API only. __This plugin is a little big 
 - great functionality
 - no dependencies
 - best of use with [www.totaljs.com - web application framework for node.js](http://www.totaljs.com)
+- works with `async`
 - [__DEMO EXAMPLE__](http://example.jcomponent.org)
 
 __YOU MUST SEE:__
@@ -284,6 +285,28 @@ jRouting.cookie.rem('cookie_name');
 // use alias:
 // jR === jRouting
 jR.route('/', ...);
+```
+
+## +v1.3.0 Async loading
+
+```html
+<script async src="jquery.min.js"></script>
+<script async src="jrouting.min.js"></script>
+```
+
+```javascript
+if (!window.jRoute)
+    window.jRoute = [];
+
+window.jRoute.push(function() {
+    jRouting.route('/', function() {
+        console.log('Classic route');
+    });        
+
+    jRouting.route('#hashtag', function() {
+        console.log('Hashtag');
+    });
+});
 ```
 
 ## Contact

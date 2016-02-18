@@ -2,7 +2,7 @@ var JRFU = {};
 var jRouting = {
 	LIMIT_HISTORY: 100,
 	LIMIT_HISTORY_ERROR: 100,
-	version: 'v1.2.0',
+	version: 'v1.3.0',
 	cache: {},
 	routes: [],
 	history: [],
@@ -147,6 +147,20 @@ jRouting.reload = function() {
 	return jRouting.refresh();
 };
 
+jRouting.async = function() {
+	if (!window.jRoute || !window.jRoute.length)
+		return;
+	while (true) {
+		var fn = window.jRoute.shift();
+		if (!fn)
+			break;
+		fn();
+	}
+
+	if (jRouting.is404)
+		jRouting.location(jRouting.url);
+};
+
 jRouting._route = function(url) {
 
 	if (url.charIndex(0) === '/')
@@ -265,18 +279,18 @@ jRouting.location = function(url, isRefresh) {
 
 	// cache old repository
 
-	if (self.url.length > 0)
+	if (self.url.length)
 		self.cache[self.url] = self.repository;
 
 	self.url = url;
 	self.repository = self.cache[url];
 
-	if (self.repository === undefined)
+	if (!self.repository)
 		self.repository = {};
 
 	self._params();
 	self.params = self._route_param(raw, route);
-
+	self.is404 = false;
 	self.emit('location', url);
 	length = routes.length;
 
@@ -344,6 +358,8 @@ jRouting.location = function(url, isRefresh) {
 	if (isError)
 		self.status(500, error);
 
+	self.is404 = true;
+
 	if (notfound)
 		self.status(404, new Error('Route not found.'));
 };
@@ -369,6 +385,13 @@ jRouting.status = function(code, message) {
 
 jRouting.redirect = function(url, model) {
 	var self = this;
+
+	if (url.substring(0, 1) === '#') {
+		location.hash = url;
+		self.model = model || null;
+		self.location(url, false);
+		return self;
+	}
 
 	if (!self.isModernBrowser) {
 		location.href = url;
@@ -441,9 +464,12 @@ jRouting._params = function() {
 	return self;
 };
 
-JRFU.path = function (url, d) {
+JRFU.path = function(url, d) {
 
-	if (typeof (d) === 'undefined')
+	if (url.substring(0, 1) === '#')
+		return url;
+
+	if (typeof(d) === 'undefined')
 		d = '/';
 
 	var index = url.indexOf('?');
@@ -482,6 +508,9 @@ if (!String.prototype.charIndex) {
 
 jRouting.path = JRFU.path = function (url, d) {
 
+	if (url.substring(0, 1) === '#')
+		return url;
+
 	if (typeof (d) === 'undefined')
 		d = '/';
 
@@ -501,6 +530,8 @@ jRouting.path = JRFU.path = function (url, d) {
 };
 
 JRFU.prepareUrl = function(url) {
+	if (url.substring(0, 1) === '#')
+		return url;
 	index = url.indexOf('#');
 	if (index !== -1)
 		return url.substring(0, index);
@@ -545,6 +576,7 @@ jRouting.on('error', function (err, url, name) {
 });
 
 function jRinit() {
+	jRouting.async()
 	$.fn.jRouting = function(g) {
 
 		if (!jRouting.isModernBrowser)
@@ -566,8 +598,9 @@ function jRinit() {
 
 	$(document).ready(function() {
 
-		var url = location.pathname;
-		jRouting.url = JRFU.path(JRFU.prepareUrl(url));
+		jRouting.async();
+
+		jRouting.url = location.hash || JRFU.path(JRFU.prepareUrl(location.pathname));
 
 		if (!jRouting.events.ready) {
 			setTimeout(function() {
@@ -581,13 +614,16 @@ function jRinit() {
 			jRouting.emit('load', jRouting.url);
 		}
 
+		$(window).on('hashchange', function() {
+			if (!jRouting.isReady)
+				return;
+			jRouting.location(JRFU.path(location.hash));
+		});
+
 		$(window).on('popstate', function() {
 			if (!jRouting.isReady)
 				return;
-			var url = location.hash || '';
-			if (!url.length)
-				url = location.pathname;
-			jRouting.location(JRFU.path(url));
+			jRouting.location(JRFU.path(location.pathname));
 		});
 	});
 }
@@ -604,3 +640,9 @@ if (window.jQuery) {
 }
 
 window.jR = jRouting;
+
+setTimeout(jRouting.async, 500);
+setTimeout(jRouting.async, 1000);
+setTimeout(jRouting.async, 2000);
+setTimeout(jRouting.async, 3000);
+setTimeout(jRouting.async, 5000);
