@@ -544,50 +544,63 @@ jRouting.on('error', function (err, url, name) {
 		self.errors.shift();
 });
 
-$.fn.jRouting = function(g) {
+function jRinit() {
+	$.fn.jRouting = function(g) {
 
-	if (!jRouting.isModernBrowser)
+		if (!jRouting.isModernBrowser)
+			return this;
+
+		var handler = function(e) {
+			e.preventDefault();
+			jRouting.redirect($(this).attr('href'));
+		};
+
+		if (!g) {
+			this.filter('a').bind('click', handler);
+			return this;
+		}
+
+		$(document).on('click', this.selector, handler);
 		return this;
-
-	var handler = function(e) {
-		e.preventDefault();
-		jRouting.redirect($(this).attr('href'));
 	};
 
-	if (!g) {
-		this.filter('a').bind('click', handler);
-		return this;
-	}
+	$(document).ready(function() {
 
-	$(document).on('click', this.selector, handler);
-	return this;
-};
+		var url = location.pathname;
+		jRouting.url = JRFU.path(JRFU.prepareUrl(url));
 
-$(document).ready(function() {
-
-	var url = location.pathname;
-	jRouting.url = JRFU.path(JRFU.prepareUrl(url));
-
-	if (!jRouting.events.ready) {
-		setTimeout(function() {
-			jRouting.isReady = true;
-			jRouting.location(jRouting.url);
+		if (!jRouting.events.ready) {
+			setTimeout(function() {
+				jRouting.isReady = true;
+				jRouting.location(jRouting.url);
+				jRouting.emit('ready', jRouting.url);
+				jRouting.emit('load', jRouting.url);
+			}, 5);
+		} else {
 			jRouting.emit('ready', jRouting.url);
 			jRouting.emit('load', jRouting.url);
-		}, 5);
-	} else {
-		jRouting.emit('ready', jRouting.url);
-		jRouting.emit('load', jRouting.url);
-	}
+		}
 
-	$(window).on('popstate', function() {
-		if (!jRouting.isReady)
-			return;
-		var url = location.hash || '';
-		if (!url.length)
-			url = location.pathname;
-		jRouting.location(JRFU.path(url));
+		$(window).on('popstate', function() {
+			if (!jRouting.isReady)
+				return;
+			var url = location.hash || '';
+			if (!url.length)
+				url = location.pathname;
+			jRouting.location(JRFU.path(url));
+		});
 	});
-});
+}
+
+if (window.jQuery) {
+	jRinit();
+} else {
+	jRouting.init = setInterval(function() {
+		if (!window.jQuery)
+			return;
+		clearInterval(jRouting.init);
+		jRinit();
+	}, 100);
+}
 
 window.jR = jRouting;
