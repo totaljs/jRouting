@@ -272,18 +272,6 @@ $('a.jrouting').jRouting();
 $('a.jrouting').jRouting(true); // for dynamic content
 ```
 
-#### Cookies
-
-```javascript
-jRouting.cookie.get('cookie_name');
-
-jRouting.cookie.set('cookie_name', 'cookie_value', expiration);
-// {Number} expiration = method sets days for the expiration
-// {Date} expiration
-
-jRouting.cookie.rem('cookie_name');
-```
-
 ## Alias: jRouting is too long as word
 
 ```javascript
