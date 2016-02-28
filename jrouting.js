@@ -2,7 +2,7 @@ var JRFU = {};
 var jRouting = {
 	LIMIT_HISTORY: 100,
 	LIMIT_HISTORY_ERROR: 100,
-	version: 'v1.3.0',
+	version: 'v1.3.1',
 	cache: {},
 	routes: [],
 	history: [],
@@ -385,7 +385,6 @@ jRouting.status = function(code, message) {
 
 jRouting.redirect = function(url, model) {
 	var self = this;
-
 	if (url.substring(0, 1) === '#') {
 		location.hash = url;
 		self.model = model || null;
@@ -591,6 +590,11 @@ function jRinit() {
 		});
 
 		$(window).on('popstate', function() {
+			// first skip
+			if (jRouting.isFirst) {
+				jRouting.isFirst = false;
+				return;
+			}
 			if (!jRouting.isReady)
 				return;
 			jRouting.location(JRFU.path(location.pathname));
