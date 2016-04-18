@@ -550,7 +550,7 @@ function jRinit() {
 	jRouting.async()
 	$.fn.jRouting = function(g) {
 
-		if (!jRouting.isModernBrowser)
+		if (jRouting.hashtags || !jRouting.isModernBrowser)
 			return this;
 
 		var handler = function(e) {
