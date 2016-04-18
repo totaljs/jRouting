@@ -2,7 +2,7 @@ var JRFU = {};
 var jRouting = {
 	LIMIT_HISTORY: 100,
 	LIMIT_HISTORY_ERROR: 100,
-	version: 'v1.3.0',
+	version: 'v1.3.1',
 	cache: {},
 	routes: [],
 	history: [],
