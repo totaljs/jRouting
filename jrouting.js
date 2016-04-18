@@ -20,6 +20,7 @@ var jRouting = {
 	isReady: false,
 	isRefresh: false,
 	isModernBrowser: typeof(history.pushState) !== 'undefined',
+	hashtags: false,
 	count: 0
 };
 
@@ -570,7 +571,10 @@ function jRinit() {
 
 		jRouting.async();
 
-		jRouting.url = location.hash || JRFU.path(JRFU.prepareUrl(location.pathname));
+		if (jRouting.hashtags)
+			jRouting.url = location.hash || JRFU.path(JRFU.prepareUrl(location.pathname));
+		else
+			jRouting.url = JRFU.path(JRFU.prepareUrl(location.pathname));
 
 		if (!jRouting.events.ready) {
 			setTimeout(function() {
@@ -585,13 +589,13 @@ function jRinit() {
 		}
 
 		$(window).on('hashchange', function() {
-			if (!jRouting.isReady)
+			if (!jRouting.isReady || !jRouting.hashtags)
 				return;
 			jRouting.location(JRFU.path(location.hash));
 		});
 
 		$(window).on('popstate', function() {
-			if (!jRouting.isReady)
+			if (!jRouting.isReady || jRouting.hashtags)
 				return;
 			jRouting.location(JRFU.path(location.pathname));
 		});
