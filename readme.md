@@ -266,6 +266,8 @@ jRouting.on('status', function(code, message) {
 
 ## Assign links to jRouting
 
+__IMPORTANT__: doesn't work with hashtags. Hashtags doesn't need a prevention for redirecting.
+
 ```javascript
 $('a.jrouting').jRouting();
 // or
