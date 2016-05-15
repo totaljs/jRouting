@@ -597,7 +597,9 @@ function jRinit() {
 		$(window).on('popstate', function() {
 			if (!jRouting.isReady || jRouting.hashtags)
 				return;
-			jRouting.location(JRFU.path(location.pathname));
+			var url = JRFU.path(location.pathname);
+			if (jRouting.url !== url)
+				jRouting.location(url);
 		});
 	});
 }
