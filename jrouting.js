@@ -2,7 +2,7 @@ var JRFU = {};
 var jRouting = {
 	LIMIT_HISTORY: 100,
 	LIMIT_HISTORY_ERROR: 100,
-	version: 'v1.3.1',
+	version: 'v1.4.0',
 	cache: {},
 	routes: [],
 	history: [],
@@ -546,12 +546,24 @@ jRouting.on('error', function (err, url, name) {
 		self.errors.shift();
 });
 
+jRouting.clientside = function(selector) {
+	$(document).on('click', selector, function(e) {
+		e.preventDefault();
+		jRouting.redirect($(this).attr('href'));
+	});
+	return jRouting;
+};
+
 function jRinit() {
 	jRouting.async()
 	$.fn.jRouting = function(g) {
 
 		if (jRouting.hashtags || !jRouting.isModernBrowser)
 			return this;
+
+		var version = $.fn.jquery.replace(/\./g, '').parseInt()
+		if (version >= 300 && g === true)
+			throw Error('$(selector).jRouting() doesn\'t work in jQuery +3. Instead of this use jRouting.clientside(selector).');
 
 		var handler = function(e) {
 			e.preventDefault();

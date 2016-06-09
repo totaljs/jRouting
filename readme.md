@@ -116,7 +116,7 @@ console.log(jRouting.errors);
 
 ```js
 jRouting.global.secret = 'AbcaDUIAZ349';
-jRouting.global.name = 'partial.js';
+jRouting.global.name = 'total.js';
 ```
 
 #### jRouting.repository;
@@ -269,9 +269,7 @@ jRouting.on('status', function(code, message) {
 __IMPORTANT__: doesn't work with hashtags. Hashtags doesn't need a prevention for redirecting.
 
 ```javascript
-$('a.jrouting').jRouting();
-// or
-$('a.jrouting').jRouting(true); // for dynamic content
+jR.clientside('a.jrouting');
 ```
 
 ## Alias: jRouting is too long as word
