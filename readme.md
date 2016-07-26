@@ -1,4 +1,7 @@
 [![MIT License][license-image]][license-url]
+
+[![Support](https://www.totaljs.com/img/button-support.png)](https://www.totaljs.com/support/)
+
 # jRouting
 
 The library supports the HTML 5 History API only. __This plugin is a little big cannon for the web development__. Works only with jQuery.
@@ -9,7 +12,7 @@ The library supports the HTML 5 History API only. __This plugin is a little big 
 - minified only 3 kB
 - great functionality
 - no dependencies
-- best of use with [www.totaljs.com - web application framework for node.js](http://www.totaljs.com)
+- best of use with [www.totaljs.com - web framework for Node.js](http://www.totaljs.com)
 - works with `async`
 - [__DEMO EXAMPLE__](http://example.jcomponent.org)
 
