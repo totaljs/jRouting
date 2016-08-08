@@ -224,7 +224,7 @@ jRouting.refresh();
 > Is the library ready?
 
 ```js
-jRouting.once('ready', funtion() {
+jRouting.once('ready', function() {
 	console.log('I\'m ready');
 	jRouting.redirect('/homepage/');
 });
