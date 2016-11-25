@@ -525,7 +525,8 @@ jR.on('error', function (err, url, name) {
 jR.clientside = function(selector) {
 	$(document).on('click', selector, function(e) {
 		e.preventDefault();
-		jR.redirect($(this).attr('href'));
+		var el = $(this);
+		jR.redirect(el.attr('href') || el.attr('data-jrouting') || el.attr('data-jr'));
 	});
 	return jRouting;
 };

@@ -273,6 +273,11 @@ __IMPORTANT__: doesn't work with hashtags. Hashtags doesn't need a prevention fo
 
 ```javascript
 jR.clientside('a.jrouting');
+
+// or
+// <div class="jrouting" data-jr="/homepage/">CLICK ON ME</div>
+jR.clientside('div.jrouting');
+
 ```
 
 ## Alias: jRouting is too long as word
