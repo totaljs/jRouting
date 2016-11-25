@@ -1,8 +1,8 @@
 var JRFU = {};
-var jRouting = {
+var jR = {
 	LIMIT_HISTORY: 100,
 	LIMIT_HISTORY_ERROR: 100,
-	version: 'v1.4.0',
+	version: 'v2.0.0',
 	cache: {},
 	routes: [],
 	history: [],
@@ -19,21 +19,32 @@ var jRouting = {
 	isFirst: true,
 	isReady: false,
 	isRefresh: false,
-	isModernBrowser: typeof(history.pushState) !== 'undefined',
+	isModernBrowser: history.pushState ? true : false,
 	hashtags: false,
 	count: 0
 };
 
+if (!window.jR)
+	window.jR = jR;
+
 if (!window.jRouting)
-	window.jRouting = jRouting;
+	window.jRouting = jR;
+
 if (!window.JRFU)
 	window.JRFU = JRFU;
 
-jRouting.on = function(name, fn) {
+jR.remove = function(url) {
 	var self = this;
+	var routes = [];
+	for (var i = 0, length = self.routes.length; i < length; i++)
+		self.routes[i].id !== url && routes.push(self.routes[i]);
+	self.routes = routes;
+	return self;
+};
 
+jR.on = function(name, fn) {
+	var self = this;
 	var e = self.events[name];
-
 	if (e) {
 		e.push(fn);
 		return self;
@@ -43,11 +54,9 @@ jRouting.on = function(name, fn) {
 	return self;
 };
 
-jRouting.once = function(name, fn) {
+jR.once = function(name, fn) {
 	var self = this;
-
 	var e = self.eventsOnce[name];
-
 	if (e) {
 		e.push(fn);
 		return self;
@@ -57,7 +66,7 @@ jRouting.once = function(name, fn) {
 	return self;
 };
 
-jRouting.emit = function(name) {
+jR.emit = function(name) {
 
 	var self = this;
 	var events = self.events[name] || [];
@@ -87,7 +96,7 @@ jRouting.emit = function(name) {
 
 };
 
-jRouting.route = function(url, fn, middleware, init) {
+jR.route = function(url, fn, middleware, init) {
 
 	var tmp;
 
@@ -113,42 +122,36 @@ jRouting.route = function(url, fn, middleware, init) {
 
 	if (url.indexOf('{') !== -1) {
 		priority -= 100;
-		for (var i = 0; i < route.length; i++) {
-			if (route[i].substring(0, 1) === '{')
-				params.push(i);
-		}
+		for (var i = 0; i < route.length; i++)
+			route[i].substring(0, 1) === '{' && params.push(i);
 		priority -= params.length;
 	}
 
-	self.routes.push({ url: route, fn: fn, priority: priority, params: params, middleware: middleware || null, init: init, count: 0, pending: false });
-
+	self.routes.remove(url);
+	self.routes.push({ id: url, url: route, fn: fn, priority: priority, params: params, middleware: middleware || null, init: init, count: 0, pending: false });
 	self.routes.sort(function(a, b) {
-		if (a.priority > b.priority)
-			return -1;
-		if (a.priority < b.priority)
-			return 1;
-		return 0;
+		return a.priority > b.priority ? -1 : a.priority < b.priority ? 1 :0;
 	});
 
 	return self;
 };
 
-jRouting.middleware = function(name, fn) {
+jR.middleware = function(name, fn) {
 	var self = this;
 	self.middlewares[name] = fn;
 	return self;
 };
 
-jRouting.refresh = function() {
+jR.refresh = function() {
 	var self = this;
 	return self.location(self.url, true);
 };
 
-jRouting.reload = function() {
-	return jRouting.refresh();
+jR.reload = function() {
+	return jR.refresh();
 };
 
-jRouting.async = function() {
+jR.async = function() {
 	if (!window.jRoute || !window.jRoute.length)
 		return;
 	while (true) {
@@ -157,17 +160,15 @@ jRouting.async = function() {
 			break;
 		fn();
 	}
-
-	if (jRouting.is404)
-		jRouting.location(jRouting.url);
+	jR.is404 && jR.location(jR.url);
 };
 
-jRouting._route = function(url) {
+jR._route = function(url) {
 
-	if (url.charIndex(0) === '/')
+	if (url.charCodeAt(0) === 47)
 		url = url.substring(1);
 
-	if (url.charIndex(url.length - 1) === '/')
+	if (url.charCodeAt(url.length - 1) === 47)
 		url = url.substring(0, url.length - 1);
 
 	var arr = url.split('/');
@@ -177,25 +178,24 @@ jRouting._route = function(url) {
 	return arr;
 };
 
-jRouting._route_param = function(routeUrl, route) {
+jR._route_param = function(routeUrl, route) {
 	var arr = [];
 
 	if (!route || !routeUrl)
 		return arr;
 
 	var length = route.params.length;
-	if (!length)
-		return arr;
-
-	for (var i = 0; i < length; i++) {
-		var value = routeUrl[route.params[i]];
-		arr.push(value === '/' ? '' : value);
+	if (length) {
+		for (var i = 0; i < length; i++) {
+			var value = routeUrl[route.params[i]];
+			arr.push(value === '/' ? '' : value);
+		}
 	}
 
 	return arr;
 };
 
-jRouting._route_compare = function(url, route) {
+jR._route_compare = function(url, route) {
 
 	var length = url.length;
 	var skip = length === 1 && url[0] === '/';
@@ -206,11 +206,10 @@ jRouting._route_compare = function(url, route) {
 	for (var i = 0; i < length; i++) {
 
 		var value = route[i];
-
-		if (typeof(value) === 'undefined')
+		if (!value)
 			return false;
 
-		if (!skip && value.charIndex(0) === '{')
+		if (!skip && value.charCodeAt(0) === 123)
 			continue;
 
 		if (value === '*')
@@ -223,9 +222,9 @@ jRouting._route_compare = function(url, route) {
 	return true;
 };
 
-jRouting.location = function(url, isRefresh) {
+jR.location = function(url, isRefresh) {
 
-	if (!jRouting.isReady)
+	if (!jR.isReady)
 		return;
 
 	var index = url.indexOf('?');
@@ -249,12 +248,9 @@ jRouting.location = function(url, isRefresh) {
 	self.isRefresh = isRefresh || false;
 	self.count++;
 
-	if (!isRefresh) {
-		if (self.url.length && self.history[self.history.length - 1] !== self.url) {
-			self.history.push(self.url);
-			if (self.history.length > self.LIMIT_HISTORY)
-				self.history.shift();
-		}
+	if (!isRefresh && self.url.length && self.history[self.history.length - 1] !== self.url) {
+		self.history.push(self.url);
+		self.history.length > self.LIMIT_HISTORY && self.history.shift();
 	}
 
 	var length = self.routes.length;
@@ -330,14 +326,13 @@ jRouting.location = function(url, isRefresh) {
 					middleware.push(function(next) {
 						fn.call(self, next, route);
 					});
-				})(route, jRouting.middlewares[route.middleware[j]]);
+				})(route, jR.middlewares[route.middleware[j]]);
 			}
 
 			if (!route.init) {
 				route.pending = true;
 				middleware.middleware(function(err) {
-					if (!err)
-						route.fn.apply(self, self.params);
+					!err && route.fn.apply(self, self.params);
 					route.pending = false;
 				});
 				return;
@@ -346,8 +341,7 @@ jRouting.location = function(url, isRefresh) {
 			route.pending = true;
 			route.init(function() {
 				middleware.middleware(function() {
-					if (!err)
-						route.fn.apply(self, self.params);
+					!err && route.fn.apply(self, self.params);
 					route.pending = false;
 				});
 			});
@@ -356,21 +350,16 @@ jRouting.location = function(url, isRefresh) {
 		})(route);
 	}
 
-	if (isError)
-		self.status(500, error);
-
+	isError && self.status(500, error);
 	self.is404 = true;
-
-	if (notfound)
-		self.status(404, new Error('Route not found.'));
+	notfound && self.status(404, new Error('Route not found.'));
 };
 
-jRouting.prev = function() {
-	var self = this;
-	return self.history[self.history.length - 1];
+jR.prev = function() {
+	return this.history[this.history.length - 1];
 };
 
-jRouting.back = function() {
+jR.back = function() {
 	var self = this;
 	var url = self.history.pop() || '/';
 	self.url = '';
@@ -378,16 +367,16 @@ jRouting.back = function() {
 	return self;
 };
 
-jRouting.status = function(code, message) {
+jR.status = function(code, message) {
 	var self = this;
 	self.emit('status', code || 404, message);
 	return self;
 };
 
-jRouting.redirect = function(url, model) {
+jR.redirect = function(url, model) {
 	var self = this;
 
-	if (url.substring(0, 1) === '#') {
+	if (url.charCodeAt(0) === 35) {
 		location.hash = url;
 		self.model = model || null;
 		self.location(url, false);
@@ -405,7 +394,7 @@ jRouting.redirect = function(url, model) {
 	return self;
 };
 
-jRouting._params = function() {
+jR._params = function() {
 
 	var self = this;
 	var data = {};
@@ -422,7 +411,7 @@ jRouting._params = function() {
 		var value = decodeURIComponent(param[1]);
 		var isArray = data[name] instanceof Array;
 
-		if (typeof(data[name]) !== 'undefined' && !isArray)
+		if (data[name] && !isArray)
 			data[name] = [data[name]];
 
 		if (isArray)
@@ -440,7 +429,7 @@ JRFU.path = function(url, d) {
 	if (url.substring(0, 1) === '#')
 		return url;
 
-	if (typeof(d) === 'undefined')
+	if (!d)
 		d = '/';
 
 	var index = url.indexOf('?');
@@ -451,7 +440,8 @@ JRFU.path = function(url, d) {
 		url = url.substring(0, index);
 	}
 
-	var c = url.charIndex(url.length - 1);
+	var l = url.length;
+	var c = url.substring(l - 1, l);
 	if (c !== d)
 		url += d;
 
@@ -471,18 +461,12 @@ if (!String.prototype.count) {
 	};
 }
 
-if (!String.prototype.charIndex) {
-	String.prototype.charIndex = function(index) {
-		return this.toString().substring(index, index + 1);
-	};
-}
-
-jRouting.path = JRFU.path = function (url, d) {
+jR.path = JRFU.path = function (url, d) {
 
 	if (url.substring(0, 1) === '#')
 		return url;
 
-	if (typeof (d) === 'undefined')
+	if (!d)
 		d = '/';
 
 	var index = url.indexOf('?');
@@ -493,7 +477,8 @@ jRouting.path = JRFU.path = function (url, d) {
 		url = url.substring(0, index);
 	}
 
-	var c = url.charIndex(url.length - 1);
+	var l = url.length;
+	var c = url.substring(l - 1, l);
 	if (c !== d)
 		url += d;
 
@@ -504,9 +489,7 @@ JRFU.prepareUrl = function(url) {
 	if (url.substring(0, 1) === '#')
 		return url;
 	index = url.indexOf('#');
-	if (index !== -1)
-		return url.substring(0, index);
-	return url;
+	return index !== -1 ? url.substring(0, index) : url;
 };
 
 if (!Array.prototype.middleware) {
@@ -516,21 +499,15 @@ if (!Array.prototype.middleware) {
 		var item = self.shift();
 
 		if (item === undefined) {
-			if (callback)
-				callback();
+			callback && callback();
 			return self;
 		}
 
 		item(function(err) {
 
-			if (err instanceof Error || err === false) {
-				// cancel
-				if (callback)
-					callback(err === false ? true : err);
-				return;
-			}
-
-			setTimeout(function() {
+			if (err instanceof Error || err === false)
+				callback && callback(err === false ? true : err);
+			else setTimeout(function() {
 				self.middleware(callback);
 			}, 1);
 		});
@@ -539,79 +516,76 @@ if (!Array.prototype.middleware) {
 	};
 }
 
-jRouting.on('error', function (err, url, name) {
+jR.on('error', function (err, url, name) {
 	var self = this;
 	self.errors.push({ error: err, url: url, name: name, date: new Date() });
-	if (self.errors.length > self.LIMIT_HISTORY_ERROR)
-		self.errors.shift();
+	self.errors.length > self.LIMIT_HISTORY_ERROR && self.errors.shift();
 });
 
-jRouting.clientside = function(selector) {
+jR.clientside = function(selector) {
 	$(document).on('click', selector, function(e) {
 		e.preventDefault();
-		jRouting.redirect($(this).attr('href'));
+		jR.redirect($(this).attr('href'));
 	});
 	return jRouting;
 };
 
 function jRinit() {
-	jRouting.async()
+	jR.async()
 	$.fn.jRouting = function(g) {
 
-		if (jRouting.hashtags || !jRouting.isModernBrowser)
+		if (jR.hashtags || !jR.isModernBrowser)
 			return this;
 
 		var version = $.fn.jquery.replace(/\./g, '').parseInt()
 		if (version >= 300 && g === true)
-			throw Error('$(selector).jRouting() doesn\'t work in jQuery +3. Instead of this use jRouting.clientside(selector).');
+			throw Error('$(selector).jRouting() doesn\'t work in jQuery +3. Instead of this use jR.clientside(selector).');
 
 		var handler = function(e) {
 			e.preventDefault();
-			jRouting.redirect($(this).attr('href'));
+			jR.redirect($(this).attr('href'));
 		};
 
-		if (!g) {
+		if (g)
+			$(document).on('click', this.selector, handler);
+		else
 			this.filter('a').bind('click', handler);
-			return this;
-		}
 
-		$(document).on('click', this.selector, handler);
 		return this;
 	};
 
 	$(document).ready(function() {
 
-		jRouting.async();
+		jR.async();
 
-		if (jRouting.hashtags)
-			jRouting.url = location.hash || JRFU.path(JRFU.prepareUrl(location.pathname));
+		if (jR.hashtags)
+			jR.url = location.hash || JRFU.path(JRFU.prepareUrl(location.pathname));
 		else
-			jRouting.url = JRFU.path(JRFU.prepareUrl(location.pathname));
+			jR.url = JRFU.path(JRFU.prepareUrl(location.pathname));
 
-		if (!jRouting.events.ready) {
+		if (!jR.events.ready) {
 			setTimeout(function() {
-				jRouting.isReady = true;
-				jRouting.location(jRouting.url);
-				jRouting.emit('ready', jRouting.url);
-				jRouting.emit('load', jRouting.url);
+				jR.isReady = true;
+				jR.location(jR.url);
+				jR.emit('ready', jR.url);
+				jR.emit('load', jR.url);
 			}, 5);
 		} else {
-			jRouting.emit('ready', jRouting.url);
-			jRouting.emit('load', jRouting.url);
+			jR.emit('ready', jR.url);
+			jR.emit('load', jR.url);
 		}
 
 		$(window).on('hashchange', function() {
-			if (!jRouting.isReady || !jRouting.hashtags)
+			if (!jR.isReady || !jR.hashtags)
 				return;
-			jRouting.location(JRFU.path(location.hash));
+			jR.location(JRFU.path(location.hash));
 		});
 
 		$(window).on('popstate', function() {
-			if (!jRouting.isReady || jRouting.hashtags)
+			if (!jR.isReady || jR.hashtags)
 				return;
 			var url = JRFU.path(location.pathname);
-			if (jRouting.url !== url)
-				jRouting.location(url);
+			jR.url !== url && jR.location(url);
 		});
 	});
 }
@@ -619,18 +593,16 @@ function jRinit() {
 if (window.jQuery) {
 	jRinit();
 } else {
-	jRouting.init = setInterval(function() {
+	jR.init = setInterval(function() {
 		if (!window.jQuery)
 			return;
-		clearInterval(jRouting.init);
+		clearInterval(jR.init);
 		jRinit();
 	}, 100);
 }
 
-window.jR = jRouting;
-
-setTimeout(jRouting.async, 500);
-setTimeout(jRouting.async, 1000);
-setTimeout(jRouting.async, 2000);
-setTimeout(jRouting.async, 3000);
-setTimeout(jRouting.async, 5000);
+setTimeout(jR.async, 500);
+setTimeout(jR.async, 1000);
+setTimeout(jR.async, 2000);
+setTimeout(jR.async, 3000);
+setTimeout(jR.async, 5000);
