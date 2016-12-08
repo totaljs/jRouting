@@ -167,6 +167,9 @@ jRouting.route('/products/{category}/', view_products, ['middleware'], function(
     // initialization function
     next();
 });
+
+// OR
+ROUTE('/', view_homepage);
 ```
 
 #### jRouting.middleware(name, fn)

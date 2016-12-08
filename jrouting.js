@@ -45,24 +45,20 @@ jR.remove = function(url) {
 jR.on = function(name, fn) {
 	var self = this;
 	var e = self.events[name];
-	if (e) {
+	if (e)
 		e.push(fn);
-		return self;
-	}
-
-	self.events[name] = [fn];
+	else
+		self.events[name] = [fn];
 	return self;
 };
 
 jR.once = function(name, fn) {
 	var self = this;
 	var e = self.eventsOnce[name];
-	if (e) {
+	if (e)
 		e.push(fn);
-		return self;
-	}
-
-	self.eventsOnce[name] = [fn];
+	else
+		self.eventsOnce[name] = [fn];
 	return self;
 };
 
@@ -504,7 +500,6 @@ if (!Array.prototype.middleware) {
 		}
 
 		item(function(err) {
-
 			if (err instanceof Error || err === false)
 				callback && callback(err === false ? true : err);
 			else setTimeout(function() {
@@ -595,10 +590,10 @@ if (window.jQuery) {
 	jRinit();
 } else {
 	jR.init = setInterval(function() {
-		if (!window.jQuery)
-			return;
-		clearInterval(jR.init);
-		jRinit();
+		if (window.jQuery) {
+			clearInterval(jR.init);
+			jRinit();
+		}
 	}, 100);
 }
 
@@ -607,3 +602,4 @@ setTimeout(jR.async, 1000);
 setTimeout(jR.async, 2000);
 setTimeout(jR.async, 3000);
 setTimeout(jR.async, 5000);
+window.ROUTE = jR.route;
