@@ -602,4 +602,6 @@ setTimeout(jR.async, 1000);
 setTimeout(jR.async, 2000);
 setTimeout(jR.async, 3000);
 setTimeout(jR.async, 5000);
-window.ROUTE = jR.route;
+window.ROUTE = function(url, fn, middleware, init) {
+	return jR.route(url, fn, middleware, init);
+}
