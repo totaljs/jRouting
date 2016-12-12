@@ -420,43 +420,6 @@ jR._params = function() {
 	return self;
 };
 
-JRFU.path = function(url, d) {
-
-	if (url.substring(0, 1) === '#')
-		return url;
-
-	if (!d)
-		d = '/';
-
-	var index = url.indexOf('?');
-	var params = '';
-
-	if (index !== -1) {
-		params = url.substring(index);
-		url = url.substring(0, index);
-	}
-
-	var l = url.length;
-	var c = url.substring(l - 1, l);
-	if (c !== d)
-		url += d;
-
-	return url + params;
-};
-
-if (!String.prototype.count) {
-	String.prototype.count = function(text) {
-		var index = 0;
-		var count = 0;
-		do {
-			index = this.indexOf(text, index + text.length);
-			if (index > 0)
-				count++;
-		} while (index > 0);
-		return count;
-	};
-}
-
 jR.path = JRFU.path = function (url, d) {
 
 	if (url.substring(0, 1) === '#')
@@ -511,6 +474,19 @@ if (!Array.prototype.middleware) {
 	};
 }
 
+if (!String.prototype.count) {
+	String.prototype.count = function(text) {
+		var index = 0;
+		var count = 0;
+		do {
+			index = this.indexOf(text, index + text.length);
+			if (index > 0)
+				count++;
+		} while (index > 0);
+		return count;
+	};
+}
+
 jR.on('error', function (err, url, name) {
 	var self = this;
 	self.errors.push({ error: err, url: url, name: name, date: new Date() });
@@ -559,16 +535,16 @@ function jRinit() {
 		else
 			jR.url = JRFU.path(JRFU.prepareUrl(location.pathname));
 
-		if (!jR.events.ready) {
+		if (jR.events.ready) {
+			jR.emit('ready', jR.url);
+			jR.emit('load', jR.url);
+		} else {
 			setTimeout(function() {
 				jR.isReady = true;
 				jR.location(jR.url);
 				jR.emit('ready', jR.url);
 				jR.emit('load', jR.url);
 			}, 5);
-		} else {
-			jR.emit('ready', jR.url);
-			jR.emit('load', jR.url);
 		}
 
 		$(window).on('hashchange', function() {
