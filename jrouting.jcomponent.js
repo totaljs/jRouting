@@ -451,7 +451,8 @@ jR.clientside = function(selector) {
 	$(document).on('click', selector, function(e) {
 		e.preventDefault();
 		var el = $(this);
-		jR.redirect(el.attr('href') || el.attr('data-jrouting') || el.attr('data-jr'));
+		var url = el.attr('href') || el.attr('data-jrouting') || el.attr('data-jr');
+		url !== ('javas' + 'cript:vo' + 'id(0)') && url !== '#' && jR.redirect(url);
 	});
 	return jRouting;
 };
