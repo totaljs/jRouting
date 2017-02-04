@@ -330,7 +330,7 @@ jR.status = function(code, message) {
 };
 
 jR.redirect = window.REDIRECT = function(url, model) {
-	var self = this;
+	var self = jR;
 
 	if (url.charCodeAt(0) === 35) {
 		location.hash = url;
