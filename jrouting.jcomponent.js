@@ -35,17 +35,16 @@ if (!window.NAVIGATION)
 	window.NAVIGATION = jR;
 
 jR.remove = function(url) {
-	var self = this;
 	var routes = [];
-	for (var i = 0, length = self.routes.length; i < length; i++)
-		self.routes[i].id !== url && routes.push(self.routes[i]);
-	self.routes = routes;
-	return self;
+	for (var i = 0, length = jR.routes.length; i < length; i++)
+		jR.routes[i].id !== url && routes.push(jR.routes[i]);
+	jR.routes = routes;
+	return jR;
 };
 
 jR.on = function(name, fn) {
 	ON(name, fn);
-	return self;
+	return jR;
 };
 
 jR.emit = function() {
@@ -68,9 +67,8 @@ jR.route = function(url, fn, middleware, init) {
 		middleware = tmp;
 	}
 
-	var self = this;
 	var priority = url.count('/') + (url.indexOf('*') === -1 ? 0 : 10);
-	var route = self._route(url.trim());
+	var route = jR._route(url.trim());
 	var params = [];
 
 	if (typeof(middleware) === 'string')
@@ -83,24 +81,22 @@ jR.route = function(url, fn, middleware, init) {
 		priority -= params.length;
 	}
 
-	self.routes.remove(url);
-	self.routes.push({ id: url, url: route, fn: fn, priority: priority, params: params, middleware: middleware || null, init: init, count: 0, pending: false });
-	self.routes.sort(function(a, b) {
+	jR.routes.remove(url);
+	jR.routes.push({ id: url, url: route, fn: fn, priority: priority, params: params, middleware: middleware || null, init: init, count: 0, pending: false });
+	jR.routes.sort(function(a, b) {
 		return a.priority > b.priority ? -1 : a.priority < b.priority ? 1 :0;
 	});
 
-	return self;
+	return jR;
 };
 
 jR.middleware = function(name, fn) {
-	var self = this;
-	self.middlewares[name] = fn;
-	return self;
+	jR.middlewares[name] = fn;
+	return jR;
 };
 
 jR.refresh = function() {
-	var self = this;
-	return self.location(self.url, true);
+	return jR.location(jR.url, true);
 };
 
 jR.reload = function() {
@@ -190,8 +186,7 @@ jR.location = function(url, isRefresh) {
 	url = JRFU.prepareUrl(url);
 	url = JRFU.path(url);
 
-	var self = this;
-	var path = self._route(url);
+	var path = jR._route(url);
 	var routes = [];
 	var notfound = true;
 	var raw = [];
@@ -201,19 +196,19 @@ jR.location = function(url, isRefresh) {
 	for (var i = 0, length = path.length; i < length; i++)
 		path[i] = path[i].toLowerCase();
 
-	self.isRefresh = isRefresh || false;
-	self.count++;
+	jR.isRefresh = isRefresh || false;
+	jR.count++;
 
-	if (!isRefresh && self.url.length && self.history[self.history.length - 1] !== self.url) {
-		self.history.push(self.url);
-		self.history.length > self.LIMIT_HISTORY && self.history.shift();
+	if (!isRefresh && jR.url.length && jR.history[jR.history.length - 1] !== jR.url) {
+		jR.history.push(jR.url);
+		jR.history.length > jR.LIMIT_HISTORY && jR.history.shift();
 	}
 
-	var length = self.routes.length;
+	var length = jR.routes.length;
 	for (var i = 0; i < length; i++) {
 
-		var route = self.routes[i];
-		if (!self._route_compare(path, route.url))
+		var route = jR.routes[i];
+		if (!jR._route_compare(path, route.url))
 			continue;
 
 		if (route.url.indexOf('*') === -1)
@@ -232,19 +227,19 @@ jR.location = function(url, isRefresh) {
 
 	// cache old repository
 
-	if (self.url.length)
-		self.cache[self.url] = self.repository;
+	if (jR.url.length)
+		jR.cache[jR.url] = jR.repository;
 
-	self.url = url;
-	self.repository = self.cache[url];
+	jR.url = url;
+	jR.repository = jR.cache[url];
 
-	if (!self.repository)
-		self.repository = {};
+	if (!jR.repository)
+		jR.repository = {};
 
-	self._params();
-	self.params = self._route_param(raw, route);
-	self.is404 = false;
-	self.emit('location', url);
+	jR._params();
+	jR.params = jR._route_param(raw, route);
+	jR.is404 = false;
+	jR.emit('location', url);
 	length = routes.length;
 
 	for (var i = 0; i < length; i++) {
@@ -255,7 +250,7 @@ jR.location = function(url, isRefresh) {
 
 		if (!route.middleware || !route.middleware.length) {
 			if (!route.init) {
-				route.fn.apply(self, self.params);
+				route.fn.apply(jR, jR.params);
 				continue;
 			}
 
@@ -263,7 +258,7 @@ jR.location = function(url, isRefresh) {
 
 			(function(route) {
 				route.init(function() {
-					route.fn.apply(self, self.params);
+					route.fn.apply(jR, jR.params);
 					route.pending = false;
 				});
 			})(route);
@@ -280,7 +275,7 @@ jR.location = function(url, isRefresh) {
 			for (var j = 0; j < l; j++) {
 				(function(route, fn) {
 					middleware.push(function(next) {
-						fn.call(self, next, route);
+						fn.call(jR, next, route);
 					});
 				})(route, jR.middlewares[route.middleware[j]]);
 			}
@@ -288,7 +283,7 @@ jR.location = function(url, isRefresh) {
 			if (!route.init) {
 				route.pending = true;
 				middleware.middleware(function(err) {
-					!err && route.fn.apply(self, self.params);
+					!err && route.fn.apply(jR, jR.params);
 					route.pending = false;
 				});
 				return;
@@ -297,7 +292,7 @@ jR.location = function(url, isRefresh) {
 			route.pending = true;
 			route.init(function() {
 				middleware.middleware(function() {
-					!err && route.fn.apply(self, self.params);
+					!err && route.fn.apply(jR, jR.params);
 					route.pending = false;
 				});
 			});
@@ -306,55 +301,50 @@ jR.location = function(url, isRefresh) {
 		})(route);
 	}
 
-	isError && self.status(500, error);
-	self.is404 = true;
-	notfound && self.status(404, new Error('Route not found.'));
+	isError && jR.status(500, error);
+	jR.is404 = true;
+	notfound && jR.status(404, new Error('Route not found.'));
 };
 
 jR.prev = function() {
-	return this.history[this.history.length - 1];
+	return jR.history[jR.history.length - 1];
 };
 
 jR.back = function() {
-	var self = this;
-	var url = self.history.pop() || '/';
-	self.url = '';
-	self.redirect(url, true);
-	return self;
+	var url = jR.history.pop() || '/';
+	jR.url = '';
+	jR.redirect(url, true);
+	return jR;
 };
 
 jR.status = function(code, message) {
-	var self = this;
-	self.emit('status', code || 404, message);
-	return self;
+	EMIT(code, message);
+	return jR;
 };
 
 jR.redirect = window.REDIRECT = function(url, model) {
-	var self = jR;
 
 	if (url.charCodeAt(0) === 35) {
 		location.hash = url;
-		self.model = model || null;
-		self.location(url, false);
-		return self;
+		jR.model = model || null;
+		jR.location(url, false);
+		return jR;
 	}
 
-	if (!self.isModernBrowser) {
+	if (!jR.isModernBrowser) {
 		location.href = url;
 		return false;
 	}
 
 	history.pushState(null, null, url);
-	self.model = model || null;
-	self.location(url, false);
-	return self;
+	jR.model = model || null;
+	jR.location(url, false);
+	return jR;
 };
 
 jR._params = function() {
 
-	var self = this;
 	var data = {};
-
 	var params = location.href.slice(location.href.indexOf('?') + 1).split('&');
 
 	for (var i = 0; i < params.length; i++) {
@@ -376,8 +366,8 @@ jR._params = function() {
 			data[name] = value;
 	}
 
-	self.query = data;
-	return self;
+	jR.query = data;
+	return jR;
 };
 
 jR.path = JRFU.path = function (url, d) {
