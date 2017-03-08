@@ -336,7 +336,7 @@ jR.location = function(url, isRefresh) {
 
 			route.pending = true;
 			route.init(function() {
-				middleware.middleware(function() {
+				middleware.middleware(function(err) {
 					!err && route.fn.apply(self, self.params);
 					route.pending = false;
 				});
@@ -447,7 +447,7 @@ jR.path = JRFU.path = function (url, d) {
 JRFU.prepareUrl = function(url) {
 	if (url.substring(0, 1) === '#')
 		return url;
-	index = url.indexOf('#');
+	var index = url.indexOf('#');
 	return index !== -1 ? url.substring(0, index) : url;
 };
 
@@ -499,17 +499,17 @@ jR.clientside = function(selector) {
 		var el = $(this);
 		jR.redirect(el.attr('href') || el.attr('data-jrouting') || el.attr('data-jr'));
 	});
-	return jRouting;
+	return jR;
 };
 
 function jRinit() {
-	jR.async()
+	jR.async();
 	$.fn.jRouting = function(g) {
 
 		if (jR.hashtags || !jR.isModernBrowser)
 			return this;
 
-		var version = $.fn.jquery.replace(/\./g, '').parseInt()
+		var version = +$.fn.jquery.replace(/\./g, '');
 		if (version >= 300 && g === true)
 			throw Error('$(selector).jRouting() doesn\'t work in jQuery +3. Instead of this use jR.clientside(selector).');
 
@@ -580,4 +580,4 @@ setTimeout(jR.async, 3000);
 setTimeout(jR.async, 5000);
 window.ROUTE = function(url, fn, middleware, init) {
 	return jR.route(url, fn, middleware, init);
-}
+};
