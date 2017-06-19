@@ -2,7 +2,7 @@ var JRFU = {};
 var jR = {
 	LIMIT_HISTORY: 100,
 	LIMIT_HISTORY_ERROR: 100,
-	version: 'v2.0.0',
+	version: 'v2.0.1',
 	cache: {},
 	routes: [],
 	history: [],
@@ -123,7 +123,7 @@ jR.route = function(url, fn, middleware, init) {
 		priority -= params.length;
 	}
 
-	self.routes.remove(url);
+	self.remove(url);
 	self.routes.push({ id: url, url: route, fn: fn, priority: priority, params: params, middleware: middleware || null, init: init, count: 0, pending: false });
 	self.routes.sort(function(a, b) {
 		return a.priority > b.priority ? -1 : a.priority < b.priority ? 1 :0;

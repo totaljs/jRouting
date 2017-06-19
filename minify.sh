@@ -1,3 +1,5 @@
 ECHO "[COMPILING]"
-uglifyjs jrouting.js --quotes=1 -m -c -o jrouting.min.js
-uglifyjs jrouting.jcomponent.js --quotes=1 -m -c -o jrouting.jcomponent.min.js
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+cd $DIR
+uglifyjs jrouting.js --config-file minify.json -o jrouting.min.js
+uglifyjs jrouting.jcomponent.js --config-file minify.json -o jrouting.jcomponent.min.js

@@ -1,521 +1,517 @@
-var JRFU = {};
-var jR = {
-	LIMIT_HISTORY: 100,
-	LIMIT_HISTORY_ERROR: 100,
-	version: 'v3.0.0',
-	cache: {},
-	routes: [],
-	history: [],
-	errors: [],
-	global: {},
-	query: {},
-	params: [],
-	middlewares: {},
-	repository: {},
-	url: '',
-	model: null,
-	isFirst: true,
-	isReady: false,
-	isRefresh: false,
-	isModernBrowser: history.pushState ? true : false,
-	hashtags: false,
-	count: 0
-};
+(function(W) {
 
-if (!window.jR)
-	window.jR = jR;
+	var JRFU = {};
+	var jR = {
+		LIMIT_HISTORY: 100,
+		LIMIT_HISTORY_ERROR: 100,
+		version: 'v3.0.1',
+		cache: {},
+		routes: [],
+		history: [],
+		errors: [],
+		global: {},
+		query: {},
+		params: [],
+		middlewares: {},
+		repository: {},
+		url: '',
+		model: null,
+		isFirst: true,
+		isReady: false,
+		isRefresh: false,
+		isModernBrowser: history.pushState ? true : false,
+		hashtags: false,
+		count: 0
+	};
 
-if (!window.jRouting)
-	window.jRouting = jR;
+	!W.jR && (W.jR = jR);
+	!W.jRouting && (W.jRouting = jR);
+	!W.JRFU && (W.JRFU = JRFU);
+	!W.NAVIGATION && (W.NAVIGATION = jR);
 
-if (!window.JRFU)
-	window.JRFU = JRFU;
+	jR.remove = function(url) {
+		var routes = [];
+		for (var i = 0, length = jR.routes.length; i < length; i++)
+			jR.routes[i].id !== url && routes.push(jR.routes[i]);
+		jR.routes = routes;
+		return jR;
+	};
 
-if (!window.NAVIGATION)
-	window.NAVIGATION = jR;
+	jR.on = function(name, fn) {
+		ON(name, fn);
+		return jR;
+	};
 
-jR.remove = function(url) {
-	var routes = [];
-	for (var i = 0, length = jR.routes.length; i < length; i++)
-		jR.routes[i].id !== url && routes.push(jR.routes[i]);
-	jR.routes = routes;
-	return jR;
-};
+	jR.emit = function() {
+		EMIT.apply(window, arguments);
+	};
 
-jR.on = function(name, fn) {
-	ON(name, fn);
-	return jR;
-};
+	jR.route = function(url, fn, middleware, init) {
 
-jR.emit = function() {
-	EMIT.apply(window, arguments);
-};
+		var tmp;
 
-jR.route = function(url, fn, middleware, init) {
-
-	var tmp;
-
-	if (fn instanceof Array) {
-		var tmp = middleware;
-		middleware = fn;
-		fn = tmp;
-	}
-
-	if (typeof(middleware) === 'function') {
-		tmp = init;
-		init = middleware;
-		middleware = tmp;
-	}
-
-	var priority = url.count('/') + (url.indexOf('*') === -1 ? 0 : 10);
-	var route = jR._route(url.trim());
-	var params = [];
-
-	if (typeof(middleware) === 'string')
-		middleware = middleware.split(',');
-
-	if (url.indexOf('{') !== -1) {
-		priority -= 100;
-		for (var i = 0; i < route.length; i++)
-			route[i].substring(0, 1) === '{' && params.push(i);
-		priority -= params.length;
-	}
-
-	jR.routes.remove(url);
-	jR.routes.push({ id: url, url: route, fn: fn, priority: priority, params: params, middleware: middleware || null, init: init, count: 0, pending: false });
-	jR.routes.sort(function(a, b) {
-		return a.priority > b.priority ? -1 : a.priority < b.priority ? 1 :0;
-	});
-
-	return jR;
-};
-
-jR.middleware = function(name, fn) {
-	jR.middlewares[name] = fn;
-	return jR;
-};
-
-jR.refresh = function() {
-	return jR.location(jR.url, true);
-};
-
-jR.reload = function() {
-	return jR.refresh();
-};
-
-jR.async = function() {
-	if (!window.jRoute || !window.jRoute.length)
-		return;
-	while (true) {
-		var fn = window.jRoute.shift();
-		if (!fn)
-			break;
-		fn();
-	}
-	jR.is404 && jR.location(jR.url);
-};
-
-jR._route = function(url) {
-
-	if (url.charCodeAt(0) === 47)
-		url = url.substring(1);
-
-	if (url.charCodeAt(url.length - 1) === 47)
-		url = url.substring(0, url.length - 1);
-
-	var arr = url.split('/');
-	if (arr.length === 1 && !arr[0])
-		arr[0] = '/';
-
-	return arr;
-};
-
-jR._route_param = function(routeUrl, route) {
-	var arr = [];
-
-	if (!route || !routeUrl)
-		return arr;
-
-	var length = route.params.length;
-	if (length) {
-		for (var i = 0; i < length; i++) {
-			var value = routeUrl[route.params[i]];
-			arr.push(value === '/' ? '' : value);
+		if (fn instanceof Array) {
+			var tmp = middleware;
+			middleware = fn;
+			fn = tmp;
 		}
-	}
 
-	return arr;
-};
+		if (typeof(middleware) === 'function') {
+			tmp = init;
+			init = middleware;
+			middleware = tmp;
+		}
 
-jR._route_compare = function(url, route) {
+		var priority = url.count('/') + (url.indexOf('*') === -1 ? 0 : 10);
+		var route = jR._route(url.trim());
+		var params = [];
 
-	var length = url.length;
-	var skip = length === 1 && url[0] === '/';
+		if (typeof(middleware) === 'string')
+			middleware = middleware.split(',');
 
-	if (route.length !== length)
-		return false;
+		if (url.indexOf('{') !== -1) {
+			priority -= 100;
+			for (var i = 0; i < route.length; i++)
+				route[i].substring(0, 1) === '{' && params.push(i);
+			priority -= params.length;
+		}
 
-	for (var i = 0; i < length; i++) {
+		jR.remove(url);
+		jR.routes.push({ id: url, url: route, fn: fn, priority: priority, params: params, middleware: middleware || null, init: init, count: 0, pending: false });
+		jR.routes.sort(function(a, b) {
+			return a.priority > b.priority ? -1 : a.priority < b.priority ? 1 :0;
+		});
 
-		var value = route[i];
-		if (!value)
+		return jR;
+	};
+
+	jR.middleware = function(name, fn) {
+		jR.middlewares[name] = fn;
+		return jR;
+	};
+
+	jR.refresh = function() {
+		return jR.location(jR.url, true);
+	};
+
+	jR.reload = function() {
+		return jR.refresh();
+	};
+
+	jR.async = function() {
+		if (!W.jRoute || !W.jRoute.length)
+			return;
+		while (true) {
+			var fn = W.jRoute.shift();
+			if (!fn)
+				break;
+			fn();
+		}
+		jR.is404 && jR.location(jR.url);
+	};
+
+	jR._route = function(url) {
+
+		if (url.charCodeAt(0) === 47)
+			url = url.substring(1);
+
+		if (url.charCodeAt(url.length - 1) === 47)
+			url = url.substring(0, url.length - 1);
+
+		var arr = url.split('/');
+		if (arr.length === 1 && !arr[0])
+			arr[0] = '/';
+
+		return arr;
+	};
+
+	jR._route_param = function(routeUrl, route) {
+		var arr = [];
+
+		if (!route || !routeUrl)
+			return arr;
+
+		var length = route.params.length;
+		if (length) {
+			for (var i = 0; i < length; i++) {
+				var value = routeUrl[route.params[i]];
+				arr.push(value === '/' ? '' : value);
+			}
+		}
+
+		return arr;
+	};
+
+	jR._route_compare = function(url, route) {
+
+		var length = url.length;
+		var skip = length === 1 && url[0] === '/';
+
+		if (route.length !== length)
 			return false;
 
-		if (!skip && value.charCodeAt(0) === 123)
-			continue;
+		for (var i = 0; i < length; i++) {
 
-		if (value === '*')
-			return true;
+			var value = route[i];
+			if (!value)
+				return false;
 
-		if (url[i] !== value)
-			return false;
-	}
+			if (!skip && value.charCodeAt(0) === 123)
+				continue;
 
-	return true;
-};
+			if (value === '*')
+				return true;
 
-jR.location = function(url, isRefresh) {
+			if (url[i] !== value)
+				return false;
+		}
 
-	if (!jR.isReady)
-		return;
+		return true;
+	};
 
-	var index = url.indexOf('?');
-	if (index !== -1)
-		url = url.substring(0, index);
+	jR.location = function(url, isRefresh) {
 
-	url = JRFU.prepareUrl(url);
-	url = JRFU.path(url);
+		if (!jR.isReady)
+			return;
 
-	var path = jR._route(url);
-	var routes = [];
-	var notfound = true;
-	var raw = [];
+		var index = url.indexOf('?');
+		if (index !== -1)
+			url = url.substring(0, index);
 
-	raw.push.apply(raw, path);
+		url = JRFU.prepareUrl(url);
+		url = JRFU.path(url);
 
-	for (var i = 0, length = path.length; i < length; i++)
-		path[i] = path[i].toLowerCase();
+		var path = jR._route(url);
+		var routes = [];
+		var notfound = true;
+		var raw = [];
 
-	jR.isRefresh = isRefresh || false;
-	jR.count++;
+		raw.push.apply(raw, path);
 
-	if (!isRefresh && jR.url.length && jR.history[jR.history.length - 1] !== jR.url) {
-		jR.history.push(jR.url);
-		jR.history.length > jR.LIMIT_HISTORY && jR.history.shift();
-	}
+		for (var i = 0, length = path.length; i < length; i++)
+			path[i] = path[i].toLowerCase();
 
-	var length = jR.routes.length;
-	for (var i = 0; i < length; i++) {
+		jR.isRefresh = isRefresh || false;
+		jR.count++;
 
-		var route = jR.routes[i];
-		if (!jR._route_compare(path, route.url))
-			continue;
+		if (!isRefresh && jR.url.length && jR.history[jR.history.length - 1] !== jR.url) {
+			jR.history.push(jR.url);
+			jR.history.length > jR.LIMIT_HISTORY && jR.history.shift();
+		}
 
-		if (route.url.indexOf('*') === -1)
-			notfound = false;
+		var length = jR.routes.length;
+		for (var i = 0; i < length; i++) {
 
-		if (route.once && route.count > 0)
-			continue;
+			var route = jR.routes[i];
+			if (!jR._route_compare(path, route.url))
+				continue;
 
-		route.count++;
-		routes.push(route);
-		break;
-	}
+			if (route.url.indexOf('*') === -1)
+				notfound = false;
 
-	var isError = false;
-	var error = [];
+			if (route.once && route.count > 0)
+				continue;
 
-	// cache old repository
+			route.count++;
+			routes.push(route);
+			break;
+		}
 
-	if (jR.url.length)
-		jR.cache[jR.url] = jR.repository;
+		var isError = false;
+		var error = [];
 
-	jR.url = url;
-	jR.repository = jR.cache[url];
+		// cache old repository
 
-	if (!jR.repository)
-		jR.repository = {};
+		if (jR.url.length)
+			jR.cache[jR.url] = jR.repository;
 
-	jR._params();
-	jR.params = jR._route_param(raw, route);
-	jR.is404 = false;
-	jR.emit('location', url);
-	length = routes.length;
+		jR.url = url;
+		jR.repository = jR.cache[url];
 
-	for (var i = 0; i < length; i++) {
-		var route = routes[i];
+		if (!jR.repository)
+			jR.repository = {};
 
-		if (route.pending)
-			continue;
+		jR._params();
+		jR.params = jR._route_param(raw, route);
+		jR.is404 = false;
+		jR.emit('location', url);
+		length = routes.length;
 
-		if (!route.middleware || !route.middleware.length) {
-			if (!route.init) {
-				route.fn.apply(jR, jR.params);
+		for (var i = 0; i < length; i++) {
+			var route = routes[i];
+
+			if (route.pending)
+				continue;
+
+			if (!route.middleware || !route.middleware.length) {
+				if (!route.init) {
+					route.fn.apply(jR, jR.params);
+					continue;
+				}
+
+				route.pending = true;
+
+				(function(route) {
+					route.init(function() {
+						route.fn.apply(jR, jR.params);
+						route.pending = false;
+					});
+				})(route);
+
+				route.init = null;
 				continue;
 			}
 
-			route.pending = true;
-
 			(function(route) {
-				route.init(function() {
-					route.fn.apply(jR, jR.params);
-					route.pending = false;
-				});
-			})(route);
 
-			route.init = null;
-			continue;
+				var l = route.middleware.length;
+				var middleware = [];
+
+				for (var j = 0; j < l; j++) {
+					(function(route, fn) {
+						middleware.push(function(next) {
+							fn.call(jR, next, route);
+						});
+					})(route, jR.middlewares[route.middleware[j]]);
+				}
+
+				if (!route.init) {
+					route.pending = true;
+					middleware.middleware(function(err) {
+						!err && route.fn.apply(jR, jR.params);
+						route.pending = false;
+					});
+					return;
+				}
+
+				route.pending = true;
+				route.init(function() {
+					middleware.middleware(function(err) {
+						!err && route.fn.apply(jR, jR.params);
+						route.pending = false;
+					});
+				});
+
+				route.init = null;
+			})(route);
 		}
 
-		(function(route) {
+		isError && jR.status(500, error);
+		jR.is404 = true;
+		notfound && jR.status(404, new Error('Route not found.'));
+	};
 
-			var l = route.middleware.length;
-			var middleware = [];
+	jR.prev = function() {
+		return jR.history[jR.history.length - 1];
+	};
 
-			for (var j = 0; j < l; j++) {
-				(function(route, fn) {
-					middleware.push(function(next) {
-						fn.call(jR, next, route);
-					});
-				})(route, jR.middlewares[route.middleware[j]]);
-			}
+	jR.back = function() {
+		var url = jR.history.pop() || '/';
+		jR.url = '';
+		jR.redirect(url, true);
+		return jR;
+	};
 
-			if (!route.init) {
-				route.pending = true;
-				middleware.middleware(function(err) {
-					!err && route.fn.apply(jR, jR.params);
-					route.pending = false;
-				});
-				return;
-			}
+	jR.status = function(code, message) {
+		EMIT(code, message);
+		return jR;
+	};
 
-			route.pending = true;
-			route.init(function() {
-				middleware.middleware(function(err) {
-					!err && route.fn.apply(jR, jR.params);
-					route.pending = false;
-				});
-			});
+	jR.redirect = W.REDIRECT = function(url, model) {
 
-			route.init = null;
-		})(route);
-	}
+		if (url.charCodeAt(0) === 35) {
+			location.hash = url;
+			jR.model = model || null;
+			jR.location(url, false);
+			return jR;
+		}
 
-	isError && jR.status(500, error);
-	jR.is404 = true;
-	notfound && jR.status(404, new Error('Route not found.'));
-};
+		if (!jR.isModernBrowser) {
+			location.href = url;
+			return false;
+		}
 
-jR.prev = function() {
-	return jR.history[jR.history.length - 1];
-};
-
-jR.back = function() {
-	var url = jR.history.pop() || '/';
-	jR.url = '';
-	jR.redirect(url, true);
-	return jR;
-};
-
-jR.status = function(code, message) {
-	EMIT(code, message);
-	return jR;
-};
-
-jR.redirect = window.REDIRECT = function(url, model) {
-
-	if (url.charCodeAt(0) === 35) {
-		location.hash = url;
+		history.pushState(null, null, url);
 		jR.model = model || null;
 		jR.location(url, false);
 		return jR;
-	}
+	};
 
-	if (!jR.isModernBrowser) {
-		location.href = url;
-		return false;
-	}
+	jR._params = function() {
 
-	history.pushState(null, null, url);
-	jR.model = model || null;
-	jR.location(url, false);
-	return jR;
-};
+		var data = {};
+		var params = location.href.slice(location.href.indexOf('?') + 1).split('&');
 
-jR._params = function() {
+		for (var i = 0; i < params.length; i++) {
 
-	var data = {};
-	var params = location.href.slice(location.href.indexOf('?') + 1).split('&');
+			var param = params[i].split('=');
+			if (param.length !== 2)
+				continue;
 
-	for (var i = 0; i < params.length; i++) {
+			var name = decodeURIComponent(param[0]);
+			var value = decodeURIComponent(param[1]);
+			var isArray = data[name] instanceof Array;
 
-		var param = params[i].split('=');
-		if (param.length !== 2)
-			continue;
+			if (data[name] && !isArray)
+				data[name] = [data[name]];
 
-		var name = decodeURIComponent(param[0]);
-		var value = decodeURIComponent(param[1]);
-		var isArray = data[name] instanceof Array;
-
-		if (data[name] && !isArray)
-			data[name] = [data[name]];
-
-		if (isArray)
-			data[name].push(value);
-		else
-			data[name] = value;
-	}
-
-	jR.query = data;
-	return jR;
-};
-
-jR.path = JRFU.path = function (url, d) {
-
-	if (url.substring(0, 1) === '#')
-		return url;
-
-	if (!d)
-		d = '/';
-
-	var index = url.indexOf('?');
-	var params = '';
-
-	if (index !== -1) {
-		params = url.substring(index);
-		url = url.substring(0, index);
-	}
-
-	var l = url.length;
-	var c = url.substring(l - 1, l);
-	if (c !== d)
-		url += d;
-
-	return url + params;
-};
-
-JRFU.prepareUrl = function(url) {
-	if (url.substring(0, 1) === '#')
-		return url;
-	var index = url.indexOf('#');
-	return index !== -1 ? url.substring(0, index) : url;
-};
-
-if (!Array.prototype.middleware) {
-	Array.prototype.middleware = function(callback) {
-
-		var self = this;
-		var item = self.shift();
-
-		if (item === undefined) {
-			callback && callback();
-			return self;
+			if (isArray)
+				data[name].push(value);
+			else
+				data[name] = value;
 		}
 
-		item(function(err) {
-			if (err instanceof Error || err === false)
-				callback && callback(err === false ? true : err);
-			else setTimeout(function() {
-				self.middleware(callback);
-			}, 1);
-		});
-
-		return self;
+		jR.query = data;
+		return jR;
 	};
-}
 
-if (!String.prototype.count) {
-	String.prototype.count = function(text) {
-		var index = 0;
-		var count = 0;
-		do {
-			index = this.indexOf(text, index + text.length);
-			if (index > 0)
-				count++;
-		} while (index > 0);
-		return count;
+	jR.path = JRFU.path = function (url, d) {
+
+		if (url.substring(0, 1) === '#')
+			return url;
+
+		if (!d)
+			d = '/';
+
+		var index = url.indexOf('?');
+		var params = '';
+
+		if (index !== -1) {
+			params = url.substring(index);
+			url = url.substring(0, index);
+		}
+
+		var l = url.length;
+		var c = url.substring(l - 1, l);
+		if (c !== d)
+			url += d;
+
+		return url + params;
 	};
-}
 
-jR.clientside = function(selector) {
-	$(document).on('click', selector, function(e) {
-		e.preventDefault();
-		var el = $(this);
-		var url = el.attr('href') || el.attr('data-jrouting') || el.attr('data-jr');
-		url !== ('javas' + 'cript:vo' + 'id(0)') && url !== '#' && jR.redirect(url);
-	});
-	return jR;
-};
+	JRFU.prepareUrl = function(url) {
+		if (url.substring(0, 1) === '#')
+			return url;
+		var index = url.indexOf('#');
+		return index !== -1 ? url.substring(0, index) : url;
+	};
 
-function jRinit() {
-	jR.async();
-	$.fn.jRouting = function(g) {
+	if (!Array.prototype.middleware) {
+		Array.prototype.middleware = function(callback) {
 
-		if (jR.hashtags || !jR.isModernBrowser)
-			return this;
+			var self = this;
+			var item = self.shift();
 
-		var version = +$.fn.jquery.replace(/\./g, '');
-		if (version >= 300 && g === true)
-			throw Error('$(selector).jRouting() doesn\'t work in jQuery +3. Instead of this use jR.clientside(selector).');
+			if (item === undefined) {
+				callback && callback();
+				return self;
+			}
 
-		var handler = function(e) {
+			item(function(err) {
+				if (err instanceof Error || err === false)
+					callback && callback(err === false ? true : err);
+				else setTimeout(function() {
+					self.middleware(callback);
+				}, 1);
+			});
+
+			return self;
+		};
+	}
+
+	if (!String.prototype.count) {
+		String.prototype.count = function(text) {
+			var index = 0;
+			var count = 0;
+			do {
+				index = this.indexOf(text, index + text.length);
+				if (index > 0)
+					count++;
+			} while (index > 0);
+			return count;
+		};
+	}
+
+	jR.clientside = function(selector) {
+		$(document).on('click', selector, function(e) {
 			e.preventDefault();
-			jR.redirect($(this).attr('href'));
+			var el = $(this);
+			var url = el.attr('href') || el.attr('data-jrouting') || el.attr('data-jr');
+			url !== ('javas' + 'cript:vo' + 'id(0)') && url !== '#' && jR.redirect(url);
+		});
+		return jR;
+	};
+
+	function jRinit() {
+		jR.async();
+		$.fn.jRouting = function(g) {
+
+			if (jR.hashtags || !jR.isModernBrowser)
+				return this;
+
+			var version = +$.fn.jquery.replace(/\./g, '');
+			if (version >= 300 && g === true)
+				throw Error('$(selector).jRouting() doesn\'t work in jQuery +3. Instead of this use jR.clientside(selector).');
+
+			var handler = function(e) {
+				e.preventDefault();
+				jR.redirect($(this).attr('href'));
+			};
+
+			if (g)
+				$(document).on('click', this.selector, handler);
+			else
+				this.filter('a').bind('click', handler);
+
+			return this;
 		};
 
-		if (g)
-			$(document).on('click', this.selector, handler);
-		else
-			this.filter('a').bind('click', handler);
+		$(document).ready(function() {
 
-		return this;
+			jR.async();
+
+			if (jR.hashtags)
+				jR.url = location.hash || JRFU.path(JRFU.prepareUrl(location.pathname));
+			else
+				jR.url = JRFU.path(JRFU.prepareUrl(location.pathname));
+
+			setTimeout(function() {
+				jR.isReady = true;
+				jR.location(jR.url);
+			}, 5);
+
+			$(window).on('hashchange', function() {
+				if (!jR.isReady || !jR.hashtags)
+					return;
+				jR.location(JRFU.path(location.hash));
+			});
+
+			$(window).on('popstate', function() {
+				if (!jR.isReady || jR.hashtags)
+					return;
+				var url = JRFU.path(location.pathname);
+				jR.url !== url && jR.location(url);
+			});
+		});
+	}
+
+	if (W.jQuery) {
+		jRinit();
+	} else {
+		jR.init = setInterval(function() {
+			if (W.jQuery) {
+				clearInterval(jR.init);
+				jRinit();
+			}
+		}, 100);
+	}
+
+	setTimeout(jR.async, 500);
+	setTimeout(jR.async, 1000);
+	setTimeout(jR.async, 2000);
+	setTimeout(jR.async, 3000);
+	setTimeout(jR.async, 5000);
+	W.ROUTE = function(url, fn, middleware, init) {
+		return jR.route(url, fn, middleware, init);
 	};
-
-	$(document).ready(function() {
-
-		jR.async();
-
-		if (jR.hashtags)
-			jR.url = location.hash || JRFU.path(JRFU.prepareUrl(location.pathname));
-		else
-			jR.url = JRFU.path(JRFU.prepareUrl(location.pathname));
-
-		setTimeout(function() {
-			jR.isReady = true;
-			jR.location(jR.url);
-		}, 5);
-
-		$(window).on('hashchange', function() {
-			if (!jR.isReady || !jR.hashtags)
-				return;
-			jR.location(JRFU.path(location.hash));
-		});
-
-		$(window).on('popstate', function() {
-			if (!jR.isReady || jR.hashtags)
-				return;
-			var url = JRFU.path(location.pathname);
-			jR.url !== url && jR.location(url);
-		});
-	});
-}
-
-if (window.jQuery) {
-	jRinit();
-} else {
-	jR.init = setInterval(function() {
-		if (window.jQuery) {
-			clearInterval(jR.init);
-			jRinit();
-		}
-	}, 100);
-}
-
-setTimeout(jR.async, 500);
-setTimeout(jR.async, 1000);
-setTimeout(jR.async, 2000);
-setTimeout(jR.async, 3000);
-setTimeout(jR.async, 5000);
-window.ROUTE = function(url, fn, middleware, init) {
-	return jR.route(url, fn, middleware, init);
-};
+})(window);
