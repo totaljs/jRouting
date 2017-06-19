@@ -25,8 +25,6 @@
 	};
 
 	!W.jR && (W.jR = jR);
-	!W.jRouting && (W.jRouting = jR);
-	!W.JRFU && (W.JRFU = JRFU);
 	!W.NAVIGATION && (W.NAVIGATION = jR);
 
 	jR.remove = function(url) {
