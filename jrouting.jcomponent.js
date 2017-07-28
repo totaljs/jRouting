@@ -44,28 +44,34 @@
 		EMIT.apply(window, arguments);
 	};
 
-	jR.route = function(url, fn, middleware, init) {
+	jR.route = function(url, fns, middlewares, init) {
+		var self = this;
 
-		var tmp;
-
-		if (fn instanceof Array) {
-			var tmp = middleware;
-			middleware = fn;
-			fn = tmp;
+		if (fns instanceof Array && typeof(fns[0]) === 'string') {
+			var tmp = fns;
+			fns = middlewares;
+			middlewares = tmp;
 		}
 
-		if (typeof(middleware) === 'function') {
-			tmp = init;
-			init = middleware;
-			middleware = tmp;
+		if (typeof(middlewares) === 'function') {
+			init = middlewares;
+			middlewares = [];
+		}
+
+		if (fns instanceof Function)
+			fns = [fns];
+
+		if (middlewares instanceof Array && middlewares.length) {
+			var tmp_middlewares = [];
+			for (var i = 0, l = middlewares.length; i < l; i++) {
+				tmp_middlewares.push(self.middlewares[middlewares[i]]);
+			}
+			fns = tmp_middlewares.concat(fns);
 		}
 
 		var priority = url.count('/') + (url.indexOf('*') === -1 ? 0 : 10);
-		var route = jR._route(url.trim());
+		var route = self._route(url.trim());
 		var params = [];
-
-		if (typeof(middleware) === 'string')
-			middleware = middleware.split(',');
 
 		if (url.indexOf('{') !== -1) {
 			priority -= 100;
@@ -74,13 +80,13 @@
 			priority -= params.length;
 		}
 
-		jR.remove(url);
-		jR.routes.push({ id: url, url: route, fn: fn, priority: priority, params: params, middleware: middleware || null, init: init, count: 0, pending: false });
-		jR.routes.sort(function(a, b) {
+		self.remove(url);
+		self.routes.push({ id: url, url: route, fns: fns, priority: priority, params: params, init: init, count: 0, pending: false });
+		self.routes.sort(function(a, b) {
 			return a.priority > b.priority ? -1 : a.priority < b.priority ? 1 :0;
 		});
 
-		return jR;
+		return self;
 	};
 
 	jR.middleware = function(name, fn) {
@@ -179,7 +185,8 @@
 		url = JRFU.prepareUrl(url);
 		url = JRFU.path(url);
 
-		var path = jR._route(url);
+		var self = this;
+		var path = self._route(url);
 		var routes = [];
 		var notfound = true;
 		var raw = [];
@@ -189,19 +196,19 @@
 		for (var i = 0, length = path.length; i < length; i++)
 			path[i] = path[i].toLowerCase();
 
-		jR.isRefresh = isRefresh || false;
-		jR.count++;
+		self.isRefresh = isRefresh || false;
+		self.count++;
 
-		if (!isRefresh && jR.url.length && jR.history[jR.history.length - 1] !== jR.url) {
-			jR.history.push(jR.url);
-			jR.history.length > jR.LIMIT_HISTORY && jR.history.shift();
+		if (!isRefresh && self.url.length && self.history[self.history.length - 1] !== self.url) {
+			self.history.push(self.url);
+			self.history.length > self.LIMIT_HISTORY && self.history.shift();
 		}
 
-		var length = jR.routes.length;
+		var length = self.routes.length;
 		for (var i = 0; i < length; i++) {
 
-			var route = jR.routes[i];
-			if (!jR._route_compare(path, route.url))
+			var route = self.routes[i];
+			if (!self._route_compare(path, route.url))
 				continue;
 
 			if (route.url.indexOf('*') === -1)
@@ -220,72 +227,54 @@
 
 		// cache old repository
 
-		if (jR.url.length)
-			jR.cache[jR.url] = jR.repository;
+		if (self.url.length)
+			self.cache[self.url] = self.repository;
 
-		jR.url = url;
-		jR.repository = jR.cache[url];
+		self.url = url;
+		self.repository = self.cache[url];
 
-		if (!jR.repository)
-			jR.repository = {};
+		if (!self.repository)
+			self.repository = {};
 
-		jR._params();
-		jR.params = jR._route_param(raw, route);
-		jR.is404 = false;
-		jR.emit('location', url);
+		self._params();
+		self.params = self._route_param(raw, route);
+		self.is404 = false;
+		self.emit('location', url);
 		length = routes.length;
 
 		for (var i = 0; i < length; i++) {
 			var route = routes[i];
+			var next_i = 0;
 
 			if (route.pending)
 				continue;
 
-			if (!route.middleware || !route.middleware.length) {
-				if (!route.init) {
-					route.fn.apply(jR, jR.params);
-					continue;
+			route.pending = true;
+
+			(function(route) {
+
+				var l = route.fns.length;
+				var fnarr = [];
+
+				for (var j = 0; j < l; j++) {
+					(function(route, index) {
+						fnarr.push(function(next) {
+							route.fns[index].call(self, next, route);
+						});
+					})(route, j);
 				}
 
 				route.pending = true;
 
-				(function(route) {
-					route.init(function() {
-						route.fn.apply(jR, jR.params);
-						route.pending = false;
-					});
-				})(route);
-
-				route.init = null;
-				continue;
-			}
-
-			(function(route) {
-
-				var l = route.middleware.length;
-				var middleware = [];
-
-				for (var j = 0; j < l; j++) {
-					(function(route, fn) {
-						middleware.push(function(next) {
-							fn.call(jR, next, route);
-						});
-					})(route, jR.middlewares[route.middleware[j]]);
-				}
-
 				if (!route.init) {
-					route.pending = true;
-					middleware.middleware(function(err) {
-						!err && route.fn.apply(jR, jR.params);
-						route.pending = false;
+					fnarr.middleware(function(err) {
+						route.pending = false;					
 					});
 					return;
 				}
 
-				route.pending = true;
 				route.init(function() {
-					middleware.middleware(function(err) {
-						!err && route.fn.apply(jR, jR.params);
+					fnarr.middleware(function(err){
 						route.pending = false;
 					});
 				});
@@ -294,9 +283,9 @@
 			})(route);
 		}
 
-		isError && jR.status(500, error);
-		jR.is404 = true;
-		notfound && jR.status(404, new Error('Route not found.'));
+		isError && self.status(500, error);
+		self.is404 = true;
+		notfound && self.status(404, new Error('Route not found.'));
 	};
 
 	jR.prev = function() {
@@ -412,6 +401,11 @@
 					self.middleware(callback);
 				}, 1);
 			});
+
+			if (!self.length) {
+				callback && callback();
+				callback = null;
+			}
 
 			return self;
 		};
