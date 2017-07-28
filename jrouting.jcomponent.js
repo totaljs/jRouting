@@ -185,8 +185,7 @@
 		url = JRFU.prepareUrl(url);
 		url = JRFU.path(url);
 
-		var self = this;
-		var path = self._route(url);
+		var path = jR._route(url);
 		var routes = [];
 		var notfound = true;
 		var raw = [];
@@ -196,19 +195,19 @@
 		for (var i = 0, length = path.length; i < length; i++)
 			path[i] = path[i].toLowerCase();
 
-		self.isRefresh = isRefresh || false;
-		self.count++;
+		jR.isRefresh = isRefresh || false;
+		jR.count++;
 
-		if (!isRefresh && self.url.length && self.history[self.history.length - 1] !== self.url) {
-			self.history.push(self.url);
-			self.history.length > self.LIMIT_HISTORY && self.history.shift();
+		if (!isRefresh && jR.url.length && jR.history[jR.history.length - 1] !== jR.url) {
+			jR.history.push(jR.url);
+			jR.history.length > jR.LIMIT_HISTORY && jR.history.shift();
 		}
 
-		var length = self.routes.length;
+		var length = jR.routes.length;
 		for (var i = 0; i < length; i++) {
 
-			var route = self.routes[i];
-			if (!self._route_compare(path, route.url))
+			var route = jR.routes[i];
+			if (!jR._route_compare(path, route.url))
 				continue;
 
 			if (route.url.indexOf('*') === -1)
@@ -227,19 +226,19 @@
 
 		// cache old repository
 
-		if (self.url.length)
-			self.cache[self.url] = self.repository;
+		if (jR.url.length)
+			jR.cache[jR.url] = jR.repository;
 
-		self.url = url;
-		self.repository = self.cache[url];
+		jR.url = url;
+		jR.repository = jR.cache[url];
 
-		if (!self.repository)
-			self.repository = {};
+		if (!jR.repository)
+			jR.repository = {};
 
-		self._params();
-		self.params = self._route_param(raw, route);
-		self.is404 = false;
-		self.emit('location', url);
+		jR._params();
+		jR.params = jR._route_param(raw, route);
+		jR.is404 = false;
+		jR.emit('location', url);
 		length = routes.length;
 
 		for (var i = 0; i < length; i++) {
@@ -259,7 +258,7 @@
 				for (var j = 0; j < l; j++) {
 					(function(route, index) {
 						fnarr.push(function(next) {
-							route.fns[index].call(self, next, route);
+							route.fns[index].call(jR, next, route);
 						});
 					})(route, j);
 				}
@@ -283,9 +282,9 @@
 			})(route);
 		}
 
-		isError && self.status(500, error);
-		self.is404 = true;
-		notfound && self.status(404, new Error('Route not found.'));
+		isError && jR.status(500, error);
+		jR.is404 = true;
+		notfound && jR.status(404, new Error('Route not found.'));
 	};
 
 	jR.prev = function() {
