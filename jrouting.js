@@ -92,29 +92,34 @@ jR.emit = function(name) {
 
 };
 
-jR.route = function(url, fn, middleware, init) {
-
-	var tmp;
-
-	if (fn instanceof Array) {
-		var tmp = middleware;
-		middleware = fn;
-		fn = tmp;
-	}
-
-	if (typeof(middleware) === 'function') {
-		tmp = init;
-		init = middleware;
-		middleware = tmp;
-	}
-
+jR.route = function(url, fns, middlewares, init) {
 	var self = this;
+
+	if (fns instanceof Array && typeof(fns[0]) === 'string') {
+		var tmp = fns;
+		fns = middlewares;
+		middlewares = tmp;
+	}
+
+	if (typeof(middlewares) === 'function') {
+		init = middlewares;
+		middlewares = [];
+	}
+
+	if (fns instanceof Function)
+		fns = [fns];
+
+	if (middlewares instanceof Array && middlewares.length) {
+		var tmp_middlewares = [];
+		for (var i = 0, l = middlewares.length; i < l; i++) {
+			tmp_middlewares.push(self.middlewares[middlewares[i]]);
+		}
+		fns = tmp_middlewares.concat(fns);
+	}
+
 	var priority = url.count('/') + (url.indexOf('*') === -1 ? 0 : 10);
 	var route = self._route(url.trim());
 	var params = [];
-
-	if (typeof(middleware) === 'string')
-		middleware = middleware.split(',');
 
 	if (url.indexOf('{') !== -1) {
 		priority -= 100;
@@ -124,7 +129,7 @@ jR.route = function(url, fn, middleware, init) {
 	}
 
 	self.remove(url);
-	self.routes.push({ id: url, url: route, fn: fn, priority: priority, params: params, middleware: middleware || null, init: init, count: 0, pending: false });
+	self.routes.push({ id: url, url: route, fns: fns, priority: priority, params: params, init: init, count: 0, pending: false });
 	self.routes.sort(function(a, b) {
 		return a.priority > b.priority ? -1 : a.priority < b.priority ? 1 :0;
 	});
@@ -289,55 +294,37 @@ jR.location = function(url, isRefresh) {
 
 	for (var i = 0; i < length; i++) {
 		var route = routes[i];
+		var next_i = 0;
 
 		if (route.pending)
 			continue;
 
-		if (!route.middleware || !route.middleware.length) {
-			if (!route.init) {
-				route.fn.apply(self, self.params);
-				continue;
+		route.pending = true;
+
+		(function(route) {
+
+			var l = route.fns.length;
+			var fnarr = [];
+
+			for (var j = 0; j < l; j++) {
+				(function(route, index) {
+					fnarr.push(function(next) {
+						route.fns[index].call(self, next, route);
+					});
+				})(route, j);
 			}
 
 			route.pending = true;
 
-			(function(route) {
-				route.init(function() {
-					route.fn.apply(self, self.params);
-					route.pending = false;
-				});
-			})(route);
-
-			route.init = null;
-			continue;
-		}
-
-		(function(route) {
-
-			var l = route.middleware.length;
-			var middleware = [];
-
-			for (var j = 0; j < l; j++) {
-				(function(route, fn) {
-					middleware.push(function(next) {
-						fn.call(self, next, route);
-					});
-				})(route, jR.middlewares[route.middleware[j]]);
-			}
-
 			if (!route.init) {
-				route.pending = true;
-				middleware.middleware(function(err) {
-					!err && route.fn.apply(self, self.params);
-					route.pending = false;
+				fnarr.middleware(function(err) {
+					route.pending = false;					
 				});
 				return;
 			}
 
-			route.pending = true;
 			route.init(function() {
-				middleware.middleware(function(err) {
-					!err && route.fn.apply(self, self.params);
+				fnarr.middleware(function(err){
 					route.pending = false;
 				});
 			});
@@ -469,6 +456,11 @@ if (!Array.prototype.middleware) {
 				self.middleware(callback);
 			}, 1);
 		});
+
+		if (!self.length) {
+			callback && callback();
+			callback = null;
+		}
 
 		return self;
 	};
