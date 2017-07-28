@@ -34,7 +34,16 @@ __YOU MUST SEE:__
 
 // jRouting === global variable
 jRouting.route('/homepage/', view_homepage, init_homepage);
-jRouting.route('/products/{category}/', view_products, ['data']);
+jRouting.route('/products/{category}/', view_products, ['data']); // 'data' is a name of a middleware
+
+// another way of using middlewares
+// jRouting.route('/path', [array_of_functions]);
+jRouting.route('/contact', [function(next){
+    if (user_can_see_this_page())
+        next();
+    else
+        next(false);
+}, view_contact]);
 
 // Supports HASHTAG routes
 jRouting.route('#users', view_homepage, init_homepage);
