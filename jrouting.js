@@ -2,7 +2,7 @@ var JRFU = {};
 var jR = {
 	LIMIT_HISTORY: 100,
 	LIMIT_HISTORY_ERROR: 100,
-	version: 'v2.0.1',
+	version: 'v3.0.0',
 	cache: {},
 	routes: [],
 	history: [],
@@ -108,13 +108,25 @@ jR.route = function(url, fn, middleware, init) {
 		middleware = tmp;
 	}
 
-	var self = this;
 	var priority = url.count('/') + (url.indexOf('*') === -1 ? 0 : 10);
-	var route = self._route(url.trim());
+	var route = jR._route(url.trim());
 	var params = [];
 
 	if (typeof(middleware) === 'string')
 		middleware = middleware.split(',');
+
+	var mid = [];
+	var roles = [];
+	var options = {};
+
+	middleware.forEach(function(item) {
+		if (typeof(item) === 'object')
+			options = item;
+		else if (item.substring(0, 1) === '@')
+			roles.push(item.substring(1));
+		else
+			mid.push(item);
+	});
 
 	if (url.indexOf('{') !== -1) {
 		priority -= 100;
@@ -123,13 +135,13 @@ jR.route = function(url, fn, middleware, init) {
 		priority -= params.length;
 	}
 
-	self.remove(url);
-	self.routes.push({ id: url, url: route, fn: fn, priority: priority, params: params, middleware: middleware || null, init: init, count: 0, pending: false });
-	self.routes.sort(function(a, b) {
+	jR.remove(url);
+	jR.routes.push({ id: url, url: route, fn: fn, priority: priority, params: params, middleware: mid.length ? mid : null, init: init, count: 0, pending: false, options: options, roles: roles });
+	jR.routes.sort(function(a, b) {
 		return a.priority > b.priority ? -1 : a.priority < b.priority ? 1 :0;
 	});
 
-	return self;
+	return jR;
 };
 
 jR.middleware = function(name, fn) {
@@ -318,28 +330,29 @@ jR.location = function(url, isRefresh) {
 			var middleware = [];
 
 			for (var j = 0; j < l; j++) {
-				(function(route, fn) {
+				var fn = jR.middlewares[route.middleware[j]];
+				fn && (function(route, fn) {
 					middleware.push(function(next) {
-						fn.call(self, next, route);
+						fn.call(jR, next, route.options, route.roles, route);
 					});
-				})(route, jR.middlewares[route.middleware[j]]);
+				})(route, fn);
 			}
 
 			if (!route.init) {
 				route.pending = true;
 				middleware.middleware(function(err) {
-					!err && route.fn.apply(self, self.params);
+					!err && route.fn.apply(jR, jR.params);
 					route.pending = false;
-				});
+				}, route);
 				return;
 			}
 
 			route.pending = true;
 			route.init(function() {
 				middleware.middleware(function(err) {
-					!err && route.fn.apply(self, self.params);
+					!err && route.fn.apply(jR, jR.params);
 					route.pending = false;
-				});
+				}, route);
 			});
 
 			route.init = null;
@@ -452,7 +465,7 @@ JRFU.prepareUrl = function(url) {
 };
 
 if (!Array.prototype.middleware) {
-	Array.prototype.middleware = function(callback) {
+	Array.prototype.middleware = function(callback, route) {
 
 		var self = this;
 		var item = self.shift();
@@ -466,9 +479,9 @@ if (!Array.prototype.middleware) {
 			if (err instanceof Error || err === false)
 				callback && callback(err === false ? true : err);
 			else setTimeout(function() {
-				self.middleware(callback);
+				self.middleware(callback, route);
 			}, 1);
-		});
+		}, route.options, route.roles);
 
 		return self;
 	};

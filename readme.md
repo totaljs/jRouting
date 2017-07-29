@@ -36,6 +36,18 @@ __YOU MUST SEE:__
 jRouting.route('/homepage/', view_homepage, init_homepage);
 jRouting.route('/products/{category}/', view_products, ['data']);
 
+// ROLES + OPTIONS
+// v4.0 for jComponent and v3.0 classic version
+jRouting.route('/secure/area/', view_products, ['auth', '@rolename1', '@rolename2', { custom: 'options' }]);
+
+jRouting.middleware('auth', function(next, options, roles) {
+    console.log(options);
+    // --> { custom: 'options' }
+    console.log(roles);
+    // --> ['rolename1', 'rolename2']
+});
+
+
 // Supports HASHTAG routes
 jRouting.route('#users', view_homepage, init_homepage);
 jRouting.route('#products', view_homepage, init_homepage);
@@ -180,7 +192,7 @@ ROUTE('/', view_homepage);
 > Create a middleware
 
 ```js
-jRouting.middleware('latest', function(next) {
+jRouting.middleware('latest', function(next, options, roles) {
     // continue
 	next();
 });
