@@ -29,6 +29,7 @@
 	!W.NAV && (W.NAV = jR);
 
 	jR.remove = function(url) {
+		url = url.env();
 		var routes = [];
 		for (var i = 0, length = jR.routes.length; i < length; i++)
 			jR.routes[i].id !== url && routes.push(jR.routes[i]);
@@ -60,6 +61,8 @@
 			init = middleware;
 			middleware = tmp;
 		}
+
+		url = url.env();
 
 		var priority = url.count('/') + (url.indexOf('*') === -1 ? 0 : 10);
 		var route = jR._route(url.trim());
@@ -332,12 +335,17 @@
 
 	jR.redirect = W.REDIRECT = function(url, model) {
 
-		if (url.charCodeAt(0) === 35) {
-			location.hash = url;
+		var c = url.charCodeAt(0);
+		if (c === 35) {
 			jR.model = model || null;
-			jR.location(url, false);
-			return jR;
+			if (jR.hashtags) {
+				location.hash = url;
+				jR.location(url, false);
+				return jR;
+			}
 		}
+
+		url = url.env();
 
 		if (!jR.isModernBrowser) {
 			location.href = url;
