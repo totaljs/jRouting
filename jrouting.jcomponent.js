@@ -338,11 +338,9 @@
 		var c = url.charCodeAt(0);
 		if (c === 35) {
 			jR.model = model || null;
-			if (jR.hashtags) {
-				location.hash = url;
-				jR.location(url, false);
-				return jR;
-			}
+			location.hash = url;
+			jR.location(url, false);
+			return jR;
 		}
 
 		url = url.env();
