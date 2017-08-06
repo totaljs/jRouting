@@ -75,7 +75,7 @@
 		var roles = [];
 		var options = {};
 
-		middleware.forEach(function(item) {
+		(middleware instanceof Array) && middleware.forEach(function(item) {
 			if (typeof(item) === 'object')
 				options = item;
 			else if (item.substring(0, 1) === '@')
@@ -455,7 +455,7 @@
 		$(document).on('click', selector, function(e) {
 			e.preventDefault();
 			var el = $(this);
-			var url = el.attr('href') || el.attr('data-jrouting') || el.attr('data-jr');
+			var url = (el.attr('href') || el.attr('data-jrouting') || el.attr('data-jr'));
 			url !== ('javas' + 'cript:vo' + 'id(0)') && url !== '#' && jR.redirect(url);
 		});
 		return jR;
@@ -518,7 +518,7 @@
 		jRinit();
 	} else {
 		jR.init = setInterval(function() {
-			if (W.jQuery) {
+			if (W.jQuery && W.MAIN) {
 				clearInterval(jR.init);
 				jRinit();
 			}
