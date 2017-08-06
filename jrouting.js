@@ -119,7 +119,7 @@ jR.route = function(url, fn, middleware, init) {
 	var roles = [];
 	var options = {};
 
-	middleware.forEach(function(item) {
+	(middleware instanceof Array) && middleware.forEach(function(item) {
 		if (typeof(item) === 'object')
 			options = item;
 		else if (item.substring(0, 1) === '@')
