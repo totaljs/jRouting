@@ -328,7 +328,7 @@ window.jRoute.push(function() {
 });
 ```
 
-## Contact
+## Contact
 
 Peter Širka - www.petersirka.eu / <petersirka@gmail.com>
 
