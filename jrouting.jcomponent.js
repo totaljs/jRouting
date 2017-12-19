@@ -4,7 +4,7 @@
 	var jR = {
 		LIMIT_HISTORY: 100,
 		LIMIT_HISTORY_ERROR: 100,
-		version: 'v4.0.0',
+		version: 'v5.0.0',
 		cache: {},
 		routes: [],
 		history: [],
@@ -64,7 +64,7 @@
 
 		url = url.env();
 
-		var priority = url.count('/') + (url.indexOf('*') === -1 ? 0 : 10);
+		var priority = url.jRcount('/') + (url.indexOf('*') === -1 ? 0 : 10);
 		var route = jR._route(url.trim());
 		var params = [];
 
@@ -97,6 +97,7 @@
 			return a.priority > b.priority ? -1 : a.priority < b.priority ? 1 :0;
 		});
 
+		NAV.is404 && url === jR.url && jR.redirect(url +(jR.queryraw ? '?' + jR.queryraw : ''));
 		return jR;
 	};
 
@@ -293,7 +294,7 @@
 
 				if (!route.init) {
 					route.pending = true;
-					middleware.middleware(function(err) {
+					middleware.jRmiddleware(function(err) {
 						!err && route.fn.apply(jR, jR.params);
 						route.pending = false;
 					}, route);
@@ -302,7 +303,7 @@
 
 				route.pending = true;
 				route.init(function() {
-					middleware.middleware(function(err) {
+					middleware.jRmiddleware(function(err) {
 						!err && route.fn.apply(jR, jR.params);
 						route.pending = false;
 					}, route);
@@ -359,7 +360,11 @@
 	jR._params = function() {
 
 		var data = {};
-		var params = location.href.slice(location.href.indexOf('?') + 1).split('&');
+		var index = location.href.indexOf('?');
+
+		jR.queryraw = index === -1 ? '' : location.href.substring(index + 1);
+
+		var params = jR.queryraw.split('&');
 
 		for (var i = 0; i < params.length; i++) {
 
@@ -415,41 +420,37 @@
 		return index !== -1 ? url.substring(0, index) : url;
 	};
 
-	if (!Array.prototype.middleware) {
-		Array.prototype.middleware = function(callback, route) {
+	Array.prototype.jRmiddleware = function(callback, route) {
 
-			var self = this;
-			var item = self.shift();
+		var self = this;
+		var item = self.shift();
 
-			if (item === undefined) {
-				callback && callback();
-				return self;
-			}
-
-			item(function(err) {
-				if (err instanceof Error || err === false)
-					callback && callback(err === false ? true : err);
-				else setTimeout(function() {
-					self.middleware(callback, route);
-				}, 1);
-			}, route.options, route.roles);
-
+		if (item === undefined) {
+			callback && callback();
 			return self;
-		};
-	}
+		}
 
-	if (!String.prototype.count) {
-		String.prototype.count = function(text) {
-			var index = 0;
-			var count = 0;
-			do {
-				index = this.indexOf(text, index + text.length);
-				if (index > 0)
-					count++;
-			} while (index > 0);
-			return count;
-		};
-	}
+		item(function(err) {
+			if (err instanceof Error || err === false)
+				callback && callback(err === false ? true : err);
+			else setTimeout(function() {
+				self.jRmiddleware(callback, route);
+			}, 1);
+		}, route.options, route.roles);
+
+		return self;
+	};
+
+	String.prototype.jRcount = function(text) {
+		var index = 0;
+		var count = 0;
+		do {
+			index = this.indexOf(text, index + text.length);
+			if (index > 0)
+				count++;
+		} while (index > 0);
+		return count;
+	};
 
 	jR.clientside = function(selector) {
 		$(document).on('click', selector, function(e) {
