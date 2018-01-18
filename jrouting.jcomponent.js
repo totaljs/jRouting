@@ -337,9 +337,10 @@
 	jR.redirect = W.REDIRECT = function(url, model) {
 
 		var c = url.charCodeAt(0);
+		var l = location;
 		if (c === 35) {
 			jR.model = model || null;
-			location.hash = url;
+			l.hash = url;
 			jR.location(url, false);
 			return jR;
 		}
@@ -347,13 +348,13 @@
 		url = url.env();
 
 		if (!jR.isModernBrowser) {
-			location.href = url;
+			l.href = url;
 			return false;
 		}
 
 		history.pushState(null, null, url);
 		jR.model = model || null;
-		jR.location(url, false);
+		jR.location(l.pathname + l.search, false);
 		return jR;
 	};
 
