@@ -101,7 +101,7 @@
 		return jR;
 	};
 
-	jR.middleware = function(name, fn) {
+	W.MIDDLEWARE = jR.middleware = function(name, fn) {
 		jR.middlewares[name] = fn;
 		return jR;
 	};
