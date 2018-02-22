@@ -17,7 +17,6 @@ The library supports the HTML 5 History API only. __This plugin is a little big 
 - no dependencies
 - best of use with [www.totaljs.com - web framework for Node.js](http://www.totaljs.com)
 - works with `async`
-- [__DEMO EXAMPLE__](http://example.jcomponent.org)
 
 __YOU MUST SEE:__
 
@@ -213,7 +212,7 @@ jRouting.redirect('/products/shoes/', { from: 'jeans', latest: true, custom: 'mo
 #### jRouting.prev()
 
 > Returns the previouse URL address.
- 
+
 ```javascript
 console.log(jRouting.prev());
 ```
@@ -320,7 +319,7 @@ if (!window.jRoute)
 window.jRoute.push(function() {
     jRouting.route('/', function() {
         console.log('Classic route');
-    });        
+    });
 
     jRouting.route('#hashtag', function() {
         console.log('Hashtag');
