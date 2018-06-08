@@ -4,7 +4,7 @@
 	var jR = {
 		LIMIT_HISTORY: 100,
 		LIMIT_HISTORY_ERROR: 100,
-		version: 'v5.0.0',
+		version: 'v5.0.1',
 		cache: {},
 		routes: [],
 		history: [],
@@ -29,7 +29,7 @@
 	!W.NAV && (W.NAV = jR);
 
 	jR.remove = function(url) {
-		url = url.env();
+		url = url.env(true);
 		var routes = [];
 		for (var i = 0, length = jR.routes.length; i < length; i++)
 			jR.routes[i].id !== url && routes.push(jR.routes[i]);
@@ -62,7 +62,7 @@
 			middleware = tmp;
 		}
 
-		url = url.env();
+		url = url.env(true);
 
 		var priority = url.jRcount('/') + (url.indexOf('*') === -1 ? 0 : 10);
 		var route = jR._route(url.trim());
@@ -336,6 +336,8 @@
 
 	jR.redirect = W.REDIRECT = function(url, model) {
 
+		url = url.env(true);
+
 		var c = url.charCodeAt(0);
 		var l = location;
 		if (c === 35) {
@@ -344,8 +346,6 @@
 			jR.location(url, false);
 			return jR;
 		}
-
-		url = url.env();
 
 		if (!jR.isModernBrowser) {
 			l.href = url;
