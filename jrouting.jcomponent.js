@@ -97,7 +97,7 @@
 			return a.priority > b.priority ? -1 : a.priority < b.priority ? 1 :0;
 		});
 
-		NAV.is404 && url === jR.url && jR.redirect(url +(jR.queryraw ? '?' + jR.queryraw : ''));
+		jR.is404 && url === jR.url && jR.redirect(url + (jR.queryraw ? '?' + jR.queryraw : ''));
 		return jR;
 	};
 
@@ -314,8 +314,12 @@
 		}
 
 		isError && jR.status(500, error);
-		jR.is404 = true;
-		notfound && jR.status(404, new Error('Route not found.'));
+
+		if (notfound) {
+			jR.is404 = true;
+			jR.status(404, new Error('Route not found.'));
+		} else
+			jR.is404 = false;
 	};
 
 	jR.prev = function() {
