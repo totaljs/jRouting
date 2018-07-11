@@ -4,7 +4,7 @@
 	var jR = {
 		LIMIT_HISTORY: 100,
 		LIMIT_HISTORY_ERROR: 100,
-		version: 'v5.0.1',
+		version: 'v5.1.0',
 		cache: {},
 		routes: [],
 		history: [],
@@ -24,12 +24,14 @@
 		count: 0
 	};
 
+	var LOC = location;
+
 	!W.jR && (W.jR = jR);
 	!W.NAVIGATION && (W.NAVIGATION = jR);
 	!W.NAV && (W.NAV = jR);
 
 	jR.remove = function(url) {
-		url = url.env(true);
+		url = url.env(true).ROOT(true);
 		var routes = [];
 		for (var i = 0, length = jR.routes.length; i < length; i++)
 			jR.routes[i].id !== url && routes.push(jR.routes[i]);
@@ -62,7 +64,7 @@
 			middleware = tmp;
 		}
 
-		url = url.env(true);
+		url = url.env(true).ROOT(true);
 
 		var priority = url.jRcount('/') + (url.indexOf('*') === -1 ? 0 : 10);
 		var route = jR._route(url.trim());
@@ -98,6 +100,7 @@
 		});
 
 		jR.is404 && url === jR.url && jR.redirect(url + (jR.queryraw ? '?' + jR.queryraw : ''));
+		jR.emit('route', url);
 		return jR;
 	};
 
@@ -340,10 +343,10 @@
 
 	jR.redirect = W.REDIRECT = function(url, model) {
 
-		url = url.env(true);
+		url = url.env(true).ROOT(true);
 
 		var c = url.charCodeAt(0);
-		var l = location;
+		var l = LOC;
 		if (c === 35) {
 			jR.model = model || null;
 			l.hash = url;
@@ -365,9 +368,9 @@
 	jR._params = function() {
 
 		var data = {};
-		var index = location.href.indexOf('?');
+		var index = LOC.href.indexOf('?');
 
-		jR.queryraw = index === -1 ? '' : location.href.substring(index + 1);
+		jR.queryraw = index === -1 ? '' : LOC.href.substring(index + 1);
 
 		var params = jR.queryraw.split('&');
 
@@ -469,36 +472,15 @@
 
 	function jRinit() {
 		jR.async();
-		$.fn.jRouting = function(g) {
-
-			if (jR.hashtags || !jR.isModernBrowser)
-				return this;
-
-			var version = +$.fn.jquery.replace(/\./g, '');
-			if (version >= 300 && g === true)
-				throw Error('$(selector).jRouting() doesn\'t work in jQuery +3. Instead of this use jR.clientside(selector).');
-
-			var handler = function(e) {
-				e.preventDefault();
-				jR.redirect($(this).attr('href'));
-			};
-
-			if (g)
-				$(document).on('click', this.selector, handler);
-			else
-				this.filter('a').bind('click', handler);
-
-			return this;
-		};
 
 		$(document).ready(function() {
 
 			jR.async();
 
 			if (jR.hashtags)
-				jR.url = location.hash || JRFU.path(JRFU.prepareUrl(location.pathname));
+				jR.url = LOC.hash || JRFU.path(JRFU.prepareUrl(LOC.pathname));
 			else
-				jR.url = JRFU.path(JRFU.prepareUrl(location.pathname));
+				jR.url = JRFU.path(JRFU.prepareUrl(LOC.pathname));
 
 			setTimeout(function() {
 				jR.isReady = true;
@@ -506,16 +488,14 @@
 			}, 5);
 
 			$(window).on('hashchange', function() {
-				if (!jR.isReady || !jR.hashtags)
-					return;
-				jR.location(JRFU.path(location.hash));
+				jR.isReady && jR.hashtags && jR.location(JRFU.path(LOC.hash));
 			});
 
 			$(window).on('popstate', function() {
-				if (!jR.isReady || jR.hashtags)
-					return;
-				var url = JRFU.path(location.pathname);
-				jR.url !== url && jR.location(url);
+				if (jR.isReady && !jR.hashtags) {
+					var url = JRFU.path(LOC.pathname);
+					jR.url !== url && jR.location(url);
+				}
 			});
 		});
 	}
