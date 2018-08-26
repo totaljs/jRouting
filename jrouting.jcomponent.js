@@ -113,7 +113,7 @@
 		return jR.location(jR.url, true);
 	};
 
-	jR.reload = function() {
+	jR.reload = W.RELOAD = function() {
 		return jR.refresh();
 	};
 
@@ -342,6 +342,9 @@
 	};
 
 	jR.redirect = W.REDIRECT = function(url, model) {
+
+		if (!url)
+			url = jR.url;
 
 		url = url.env(true).ROOT(true);
 
