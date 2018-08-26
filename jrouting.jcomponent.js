@@ -113,7 +113,7 @@
 		return jR.location(jR.url, true);
 	};
 
-	jR.reload = W.RELOAD = function() {
+	jR.reload = function() {
 		return jR.refresh();
 	};
 
