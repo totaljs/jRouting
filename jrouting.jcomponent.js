@@ -4,7 +4,7 @@
 	var jR = {
 		LIMIT_HISTORY: 100,
 		LIMIT_HISTORY_ERROR: 100,
-		version: 'v5.1.0',
+		version: 'v5.2.0',
 		cache: {},
 		routes: [],
 		history: [],
