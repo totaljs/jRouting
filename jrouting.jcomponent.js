@@ -4,7 +4,7 @@
 	var jR = {
 		LIMIT_HISTORY: 100,
 		LIMIT_HISTORY_ERROR: 100,
-		version: 'v5.2.0',
+		version: 'v5.2.1',
 		cache: {},
 		routes: [],
 		history: [],
@@ -105,6 +105,18 @@
 	};
 
 	W.MIDDLEWARE = jR.middleware = function(name, fn) {
+
+		if (name instanceof Array) {
+			name.wait(function(item, next) {
+				var mid = jR.middlewares[name];
+				if (mid)
+					mid(next);
+				else
+					next();
+			}, fn);
+			return jR;
+		}
+
 		jR.middlewares[name] = fn;
 		return jR;
 	};
