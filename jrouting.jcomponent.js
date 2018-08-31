@@ -108,7 +108,7 @@
 
 		if (name instanceof Array) {
 			name.wait(function(item, next) {
-				var mid = jR.middlewares[name];
+				var mid = jR.middlewares[item];
 				if (mid)
 					mid(next);
 				else
