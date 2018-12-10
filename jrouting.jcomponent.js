@@ -62,10 +62,8 @@
 		try {
 			var tmp = PARSE(localStorage.getItem(MAIN.$localstorage + '.nav') || 'null');
 			if (tmp && tmp.history) {
-				if (tmp.history instanceof Array && (!expire || ((new Date()).add('-' + expire) < tmp.ts))) {
+				if (tmp.history instanceof Array && (!expire || ((new Date()).add('-' + expire) < tmp.ts)))
 					jR.history = tmp.history;
-					jR.history.pop();
-				}
 			}
 		} catch(e) {}
 	};
