@@ -4,7 +4,7 @@
 	var jR = {
 		LIMIT_HISTORY: 100,
 		LIMIT_HISTORY_ERROR: 100,
-		version: 'v5.2.1',
+		version: 'v5.3.0',
 		cache: {},
 		routes: [],
 		history: [],
@@ -46,6 +46,26 @@
 
 	jR.emit = function() {
 		EMIT.apply(window, arguments);
+	};
+
+	jR.autosave = function(val) {
+		jR.$save = 1;
+	};
+
+	jR.save = function() {
+		try {
+			localStorage.setItem(MAIN.$localstorage + '.nav', JSON.stringify({ history: history, ts: new Date() }));
+		} catch (e) {}
+	};
+
+	jR.load = function(expire) {
+		try {
+			var tmp = PARSE(localStorage.getItem(MAIN.$localstorage + '.nav') || 'null');
+			if (tmp && tmp.history) {
+				if (!expire || ((new Date()).add('-' + expire) < tmp.ts))
+					jR.history = tmp.history;
+			}
+		} catch(e) {}
 	};
 
 	jR.route = function(url, fn, middleware, init) {
@@ -226,6 +246,7 @@
 		jR.count++;
 
 		if (!isRefresh && jR.url.length && jR.history[jR.history.length - 1] !== jR.url) {
+			jR.$save && jR.save();
 			jR.history.push(jR.url);
 			jR.history.length > jR.LIMIT_HISTORY && jR.history.shift();
 		}
