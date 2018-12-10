@@ -61,7 +61,7 @@
 		} catch (e) {}
 	};
 
-	jR.load = function(expire) {
+	jR.load = function() {
 		try {
 			var tmp = PARSE(localStorage.getItem(MAIN.$localstorage + '.nav') || 'null');
 			if (tmp) {
@@ -261,6 +261,12 @@
 				jR.$save && jR.save();
 			}
 		}
+
+		if (jR.isback !== jR.$prev.length)
+			SET('NAV.isback', jR.$prev.length);
+
+		if (jR.isforward !== jR.$next.length)
+			SET('NAV.isforward', jR.$next.length);
 
 		var length = jR.routes.length;
 		for (var i = 0; i < length; i++) {
