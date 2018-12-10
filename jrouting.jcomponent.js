@@ -7,7 +7,8 @@
 		version: 'v5.3.0',
 		cache: {},
 		routes: [],
-		history: [],
+		$prev: [],
+		$next: [],
 		errors: [],
 		global: {},
 		query: {},
@@ -23,6 +24,8 @@
 		hashtags: false,
 		count: 0
 	};
+
+	jR.history = jR.$prev;
 
 	var LOC = location;
 
@@ -54,16 +57,19 @@
 
 	jR.save = function() {
 		try {
-			localStorage.setItem(MAIN.$localstorage + '.nav', STRINGIFY({ history: jR.history, ts: new Date() }));
+			localStorage.setItem(MAIN.$localstorage + '.nav', STRINGIFY({ prev: jR.$prev, next: jR.$next, ts: new Date() }));
 		} catch (e) {}
 	};
 
 	jR.load = function(expire) {
 		try {
 			var tmp = PARSE(localStorage.getItem(MAIN.$localstorage + '.nav') || 'null');
-			if (tmp && tmp.history) {
-				if (tmp.history instanceof Array && (!expire || ((new Date()).add('-' + expire) < tmp.ts)))
-					jR.history = tmp.history;
+			if (tmp) {
+				if (tmp.prev instanceof Array)
+					jR.$prev = jR.history = tmp.prev;
+				if (tmp.next instanceof Array)
+					jR.$next = tmp.next;
+				jR.$pop = true;
 			}
 		} catch(e) {}
 	};
@@ -119,7 +125,7 @@
 			return a.priority > b.priority ? -1 : a.priority < b.priority ? 1 :0;
 		});
 
-		jR.is404 && url === jR.url && jR.redirect(url + (jR.queryraw ? '?' + jR.queryraw : ''));
+		jR.is404 && url === jR.url && W.REDIRECT(url + (jR.queryraw ? '?' + jR.queryraw : ''));
 		jR.emit('route', url);
 		return jR;
 	};
@@ -245,10 +251,15 @@
 		jR.isRefresh = isRefresh || false;
 		jR.count++;
 
-		if (!isRefresh && jR.url.length && jR.history[jR.history.length - 1] !== jR.url) {
-			jR.history.push(jR.url);
-			jR.$save && jR.save();
-			jR.history.length > jR.LIMIT_HISTORY && jR.history.shift();
+		if (!isRefresh && jR.url.length && jR.prev() !== jR.url) {
+			if (jR.$pop)
+				jR.$pop = false;
+			else {
+				jR.$prev.push(jR.url);
+				jR.$prev.length > jR.LIMIT_HISTORY && jR.$prev.shift();
+				jR.$next.length > jR.LIMIT_HISTORY && jR.$next.shift();
+				jR.$save && jR.save();
+			}
 		}
 
 		var length = jR.routes.length;
@@ -359,13 +370,30 @@
 	};
 
 	jR.prev = function() {
-		return jR.history[jR.history.length - 1];
+		return jR.$prev[jR.$prev.length - 1];
 	};
 
-	jR.back = function() {
-		var url = jR.history.pop() || '/';
+	jR.next = function() {
+		return jR.$next[jR.$next.length - 1];
+	};
+
+	jR.back = function(model) {
+		var url = jR.$prev.pop() || '/';
+		if (jR.url && jR.next() !== jR.url)
+			jR.$next.push(jR.url);
 		jR.url = '';
-		jR.redirect(url, true);
+		W.REDIRECT(url, model);
+		jR.$save && jR.save();
+		return jR;
+	};
+
+	jR.forward = function(model) {
+		var url = jR.$next.pop() || '/';
+		if (jR.url && jR.prev() !== jR.url)
+			jR.$prev.push(jR.url);
+		jR.url = '';
+		W.REDIRECT(url, model);
+		jR.$save && jR.save();
 		return jR;
 	};
 
@@ -374,7 +402,7 @@
 		return jR;
 	};
 
-	jR.redirect = W.REDIRECT = function(url, model) {
+	W.REDIRECT = function(url, model) {
 
 		if (!url)
 			url = jR.url;
@@ -501,7 +529,7 @@
 			e.preventDefault();
 			var el = $(this);
 			var url = (el.attr('href') || el.attr('data-jrouting') || el.attr('data-jr'));
-			url !== ('javas' + 'cript:vo' + 'id(0)') && url !== '#' && jR.redirect(url);
+			url !== ('javas' + 'cript:vo' + 'id(0)') && url !== '#' && W.REDIRECT(url);
 		});
 		return jR;
 	};
