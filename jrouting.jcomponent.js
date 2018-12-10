@@ -48,13 +48,13 @@
 		EMIT.apply(window, arguments);
 	};
 
-	jR.autosave = function(val) {
+	jR.autosave = function() {
 		jR.$save = 1;
 	};
 
 	jR.save = function() {
 		try {
-			localStorage.setItem(MAIN.$localstorage + '.nav', JSON.stringify({ history: history, ts: new Date() }));
+			localStorage.setItem(MAIN.$localstorage + '.nav', STRINGIFY({ history: jR.history, ts: new Date() }));
 		} catch (e) {}
 	};
 
@@ -62,8 +62,10 @@
 		try {
 			var tmp = PARSE(localStorage.getItem(MAIN.$localstorage + '.nav') || 'null');
 			if (tmp && tmp.history) {
-				if (!expire || ((new Date()).add('-' + expire) < tmp.ts))
+				if (tmp.history instanceof Array && (!expire || ((new Date()).add('-' + expire) < tmp.ts))) {
 					jR.history = tmp.history;
+					jR.history.pop();
+				}
 			}
 		} catch(e) {}
 	};
@@ -246,8 +248,8 @@
 		jR.count++;
 
 		if (!isRefresh && jR.url.length && jR.history[jR.history.length - 1] !== jR.url) {
-			jR.$save && jR.save();
 			jR.history.push(jR.url);
+			jR.$save && jR.save();
 			jR.history.length > jR.LIMIT_HISTORY && jR.history.shift();
 		}
 
