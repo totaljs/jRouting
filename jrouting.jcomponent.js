@@ -294,7 +294,12 @@
 		if (jR.url.length)
 			jR.cache[jR.url] = jR.repository;
 
+		var tmp = jR.url;
 		jR.url = url;
+
+		if (jR.url !== tmp)
+			UPDATE('NAV.url');
+
 		jR.repository = jR.cache[url];
 
 		if (!jR.repository)
