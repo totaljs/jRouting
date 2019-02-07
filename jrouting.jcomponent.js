@@ -1,37 +1,37 @@
 (function(W) {
 
 	var JRFU = {};
+
 	var jR = {
-		LIMIT_HISTORY: 100,
-		LIMIT_HISTORY_ERROR: 100,
-		version: 'v5.3.0',
 		cache: {},
-		routes: [],
-		$prev: [],
-		$next: [],
+		version: 'v5.4.0',
 		errors: [],
 		global: {},
-		query: {},
-		params: [],
-		middlewares: {},
-		repository: {},
-		url: '',
-		model: null,
-		isFirst: true,
-		isReady: false,
-		isRefresh: false,
-		isModernBrowser: history.pushState ? true : false,
 		hashtags: false,
+		middlewares: {},
+		model: null,
+		params: [],
+		query: {},
+		repository: {},
+		routes: [],
+		url: '',
 		count: 0
 	};
 
-	jR.history = jR.$prev;
+	var Internal = {
+		$prev: [],
+		$next: [],
+		isReady: false,
+		LIMIT_HISTORY: 100,
+		LIMIT_HISTORY_ERROR: 100
+	};
+
+	jR.history = Internal.$prev;
 
 	var LOC = location;
-
-	!W.jR && (W.jR = jR);
 	!W.NAVIGATION && (W.NAVIGATION = jR);
 	!W.NAV && (W.NAV = jR);
+	!W.jR && (W.jR = jR);
 
 	jR.remove = function(url) {
 		url = url.env(true).ROOT(true);
@@ -57,7 +57,7 @@
 
 	jR.save = function() {
 		try {
-			localStorage.setItem(MAIN.$localstorage + '.nav', STRINGIFY({ prev: jR.$prev, next: jR.$next, ts: new Date() }));
+			localStorage.setItem(MAIN.$localstorage + '.nav', STRINGIFY({ prev: Internal.$prev, next: Internal.$next, ts: new Date() }));
 		} catch (e) {}
 	};
 
@@ -66,9 +66,9 @@
 			var tmp = PARSE(localStorage.getItem(MAIN.$localstorage + '.nav') || 'null');
 			if (tmp) {
 				if (tmp.prev instanceof Array)
-					jR.$prev = jR.history = tmp.prev;
+					Internal.$prev = jR.history = tmp.prev;
 				if (tmp.next instanceof Array)
-					jR.$next = tmp.next;
+					Internal.$next = tmp.next;
 				jR.$pop = true;
 			}
 		} catch(e) {}
@@ -155,18 +155,6 @@
 		return jR.refresh();
 	};
 
-	jR.async = function() {
-		if (!W.jRoute || !W.jRoute.length)
-			return;
-		while (true) {
-			var fn = W.jRoute.shift();
-			if (!fn)
-				break;
-			fn();
-		}
-		jR.is404 && jR.location(jR.url);
-	};
-
 	jR._route = function(url) {
 
 		if (url.charCodeAt(0) === 47)
@@ -228,7 +216,7 @@
 
 	jR.location = function(url, isRefresh) {
 
-		if (!jR.isReady)
+		if (!Internal.isReady)
 			return;
 
 		var index = url.indexOf('?');
@@ -248,25 +236,26 @@
 		for (var i = 0, length = path.length; i < length; i++)
 			path[i] = path[i].toLowerCase();
 
-		jR.isRefresh = isRefresh || false;
-		jR.count++;
-
 		if (!isRefresh && jR.url.length && jR.prev() !== jR.url) {
 			if (jR.$pop)
 				jR.$pop = false;
 			else {
-				jR.$prev.push(jR.url);
-				jR.$prev.length > jR.LIMIT_HISTORY && jR.$prev.shift();
-				jR.$next.length > jR.LIMIT_HISTORY && jR.$next.shift();
+				Internal.$prev.push(jR.url);
+				Internal.$prev.length > jR.LIMIT_HISTORY && Internal.$prev.shift();
+				Internal.$next.length > jR.LIMIT_HISTORY && Internal.$next.shift();
 				jR.$save && jR.save();
 			}
 		}
 
-		if (jR.isback !== jR.$prev.length)
-			SET('NAV.isback', jR.$prev.length);
+		var k = 'NAV.isback';
 
-		if (jR.isforward !== jR.$next.length)
-			SET('NAV.isforward', jR.$next.length);
+		if (jR.isback !== Internal.$prev.length && M.paths[k])
+			SET(k, Internal.$prev.length);
+
+		k = 'NAV.isforward';
+
+		if (jR.isforward !== Internal.$next.length && M.paths[k])
+			SET(k, Internal.$next.length);
 
 		var length = jR.routes.length;
 		for (var i = 0; i < length; i++) {
@@ -297,8 +286,10 @@
 		var tmp = jR.url;
 		jR.url = url;
 
-		if (jR.url !== tmp)
-			UPDATE('NAV.url');
+		k = 'NAV.url';
+
+		if (jR.url !== tmp && M.paths[k])
+			UPDATE(k);
 
 		jR.repository = jR.cache[url];
 
@@ -381,17 +372,17 @@
 	};
 
 	jR.prev = function() {
-		return jR.$prev[jR.$prev.length - 1];
+		return Internal.$prev[Internal.$prev.length - 1];
 	};
 
 	jR.next = function() {
-		return jR.$next[jR.$next.length - 1];
+		return Internal.$next[Internal.$next.length - 1];
 	};
 
 	jR.back = function(model) {
-		var url = jR.$prev.pop() || '/';
+		var url = Internal.$prev.pop() || '/';
 		if (jR.url && jR.next() !== jR.url)
-			jR.$next.push(jR.url);
+			Internal.$next.push(jR.url);
 		jR.url = '';
 		W.REDIRECT(url, model);
 		jR.$save && jR.save();
@@ -399,9 +390,9 @@
 	};
 
 	jR.forward = function(model) {
-		var url = jR.$next.pop() || '/';
+		var url = Internal.$next.pop() || '/';
 		if (jR.url && jR.prev() !== jR.url)
-			jR.$prev.push(jR.url);
+			Internal.$prev.push(jR.url);
 		jR.url = '';
 		W.REDIRECT(url, model);
 		jR.$save && jR.save();
@@ -414,30 +405,21 @@
 	};
 
 	W.REDIRECT = NAV.redirect = function(url, model) {
-
 		if (!url)
 			url = jR.url;
-
 		url = url.env(true).ROOT(true);
-
 		var c = url.charCodeAt(0);
 		var l = LOC;
 		if (c === 35) {
 			jR.model = model || null;
 			l.hash = url;
 			jR.location(url, false);
-			return jR;
-		}
-
-		if (!jR.isModernBrowser) {
+		} else if (history.pushState) {
+			history.pushState(null, null, url);
+			jR.model = model || null;
+			jR.location(l.pathname + l.search, false);
+		} else
 			l.href = url;
-			return false;
-		}
-
-		history.pushState(null, null, url);
-		jR.model = model || null;
-		jR.location(l.pathname + l.search, false);
-		return jR;
 	};
 
 	jR._params = function() {
@@ -539,18 +521,15 @@
 		$(document).on('click', selector, function(e) {
 			e.preventDefault();
 			var el = $(this);
-			var url = (el.attr('href') || el.attr('data-jrouting') || el.attr('data-jr'));
+			var url = (el.attr('href') || el.attrd('href') || el.attrd('url'));
 			url !== ('javas' + 'cript:vo' + 'id(0)') && url !== '#' && W.REDIRECT(url);
 		});
 		return jR;
 	};
 
 	function jRinit() {
-		jR.async();
 
 		$(document).ready(function() {
-
-			jR.async();
 
 			if (jR.hashtags)
 				jR.url = LOC.hash || JRFU.path(JRFU.prepareUrl(LOC.pathname));
@@ -558,16 +537,16 @@
 				jR.url = JRFU.path(JRFU.prepareUrl(LOC.pathname));
 
 			setTimeout(function() {
-				jR.isReady = true;
+				Internal.isReady = true;
 				jR.location(jR.url);
 			}, 5);
 
 			$(window).on('hashchange', function() {
-				jR.isReady && jR.hashtags && jR.location(JRFU.path(LOC.hash));
+				Internal.isReady && jR.hashtags && jR.location(JRFU.path(LOC.hash));
 			});
 
 			$(window).on('popstate', function() {
-				if (jR.isReady && !jR.hashtags) {
+				if (Internal.isReady && !jR.hashtags) {
 					var url = JRFU.path(LOC.pathname);
 					jR.url !== url && jR.location(url);
 				}
