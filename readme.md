@@ -168,7 +168,7 @@ function view_new_url() {
 console.log(jRouting.query.q);
 ```
 
-## Methods
+## Methods
 
 #### jRouting.route(path, fn, [middleware], [init])
 
