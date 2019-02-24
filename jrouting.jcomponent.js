@@ -1,10 +1,11 @@
 (function(W) {
 
 	var JRFU = {};
+	var NAME_NAV = 'NAV.';
 
 	var jR = {
 		cache: {},
-		version: 'v5.4.0',
+		version: 5.5,
 		errors: [],
 		global: {},
 		hashtags: false,
@@ -247,12 +248,12 @@
 			}
 		}
 
-		var k = 'NAV.isback';
+		var k = NAME_NAV + 'isback';
 
 		if (jR.isback !== Internal.$prev.length && M.paths[k])
 			SET(k, Internal.$prev.length);
 
-		k = 'NAV.isforward';
+		k = NAME_NAV + 'isforward';
 
 		if (jR.isforward !== Internal.$next.length && M.paths[k])
 			SET(k, Internal.$next.length);
@@ -286,18 +287,28 @@
 		var tmp = jR.url;
 		jR.url = url;
 
-		k = 'NAV.url';
+		k = NAME_NAV + 'url';
 
 		if (jR.url !== tmp && M.paths[k])
-			UPDATE(k);
+			UPD(k);
 
 		jR.repository = jR.cache[url];
+
+		k = NAME_NAV + 'repository';
+
+		if (M.paths[k])
+			UPD(k);
 
 		if (!jR.repository)
 			jR.repository = {};
 
 		jR._params();
 		jR.params = jR._route_param(raw, route);
+
+		k = NAME_NAV + 'params';
+		if (M.paths[k])
+			UPD(k);
+
 		jR.is404 = false;
 		jR.emit('location', url);
 		length = routes.length;
@@ -451,6 +462,9 @@
 		}
 
 		jR.query = data;
+
+		var p = NAME_NAV + 'query';
+		M.paths[p] && UPD(p);
 		return jR;
 	};
 
@@ -564,12 +578,6 @@
 			}
 		}, 100);
 	}
-
-	setTimeout(jR.async, 500);
-	setTimeout(jR.async, 1000);
-	setTimeout(jR.async, 2000);
-	setTimeout(jR.async, 3000);
-	setTimeout(jR.async, 5000);
 	W.ROUTE = function(url, fn, middleware, init) {
 		return jR.route(url, fn, middleware, init);
 	};
