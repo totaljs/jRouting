@@ -377,7 +377,7 @@
 
 		if (notfound) {
 			jR.is404 = true;
-			jR.status(404, new Error('Route not found.'));
+			jR.status(404);
 		} else
 			jR.is404 = false;
 	};
@@ -568,11 +568,11 @@
 		});
 	}
 
-	if (W.jQuery) {
+	if (W.jQuery && W.MAIN && W.MAIN.loaded) {
 		jRinit();
 	} else {
 		jR.init = setInterval(function() {
-			if (W.jQuery && W.MAIN) {
+			if (W.jQuery && W.MAIN && W.MAIN.loaded) {
 				clearInterval(jR.init);
 				jRinit();
 			}
