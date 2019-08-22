@@ -1,4 +1,4 @@
-(function(W) {
+(function() {
 
 	var JRFU = {};
 	var NAME_NAV = 'NAV.';
