@@ -542,9 +542,6 @@
 	};
 
 	function jRinit() {
-
-		jR._params();
-
 		$(document).ready(function() {
 
 			if (jR.hashtags)
@@ -578,6 +575,9 @@
 			}
 		}, 100);
 	}
+
+	jR._params();
+
 	W.ROUTE = function(url, fn, middleware, init) {
 		return jR.route(url, fn, middleware, init);
 	};
