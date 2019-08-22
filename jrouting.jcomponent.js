@@ -464,7 +464,7 @@
 		jR.query = data;
 
 		var p = NAME_NAV + 'query';
-		M.paths[p] && UPD(p);
+		W.M && W.M.paths[p] && UPD(p);
 		return jR;
 	};
 
