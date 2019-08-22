@@ -5,7 +5,7 @@
 
 	var jR = {
 		cache: {},
-		version: 5.5,
+		version: 5.6,
 		errors: [],
 		global: {},
 		hashtags: false,
@@ -49,7 +49,7 @@
 	};
 
 	jR.emit = function() {
-		EMIT.apply(window, arguments);
+		EMIT.apply(W, arguments);
 	};
 
 	jR.autosave = function() {
@@ -543,6 +543,8 @@
 
 	function jRinit() {
 
+		jR._params();
+
 		$(document).ready(function() {
 
 			if (jR.hashtags)
@@ -555,11 +557,9 @@
 				jR.location(jR.url);
 			}, 5);
 
-			$(window).on('hashchange', function() {
+			$(W).on('hashchange', function() {
 				Internal.isReady && jR.hashtags && jR.location(JRFU.path(LOC.hash));
-			});
-
-			$(window).on('popstate', function() {
+			}).on('popstate', function() {
 				if (Internal.isReady && !jR.hashtags) {
 					var url = JRFU.path(LOC.pathname);
 					jR.url !== url && jR.location(url);
@@ -581,4 +581,5 @@
 	W.ROUTE = function(url, fn, middleware, init) {
 		return jR.route(url, fn, middleware, init);
 	};
-})(window);
+
+})();
