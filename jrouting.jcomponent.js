@@ -1,4 +1,4 @@
-(function() {
+(function(W) {
 
 	var JRFU = {};
 	var NAME_NAV = 'NAV.';
@@ -582,4 +582,4 @@
 		return jR.route(url, fn, middleware, init);
 	};
 
-})();
+})(window);
