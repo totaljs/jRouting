@@ -5,7 +5,7 @@
 
 	var jR = {
 		cache: {},
-		version: 5.6,
+		version: 5.7,
 		errors: [],
 		global: {},
 		hashtags: false,
@@ -37,7 +37,7 @@
 	jR.remove = function(url) {
 		url = url.env(true).ROOT(true);
 		var routes = [];
-		for (var i = 0, length = jR.routes.length; i < length; i++)
+		for (var i = 0; i < jR.routes.length; i++)
 			jR.routes[i].id !== url && routes.push(jR.routes[i]);
 		jR.routes = routes;
 		return jR;
@@ -98,7 +98,7 @@
 		var params = [];
 
 		if (typeof(middleware) === 'string')
-			middleware = middleware.split(',');
+			middleware = middleware.split(',').trim();
 
 		var mid = [];
 		var roles = [];
@@ -234,7 +234,7 @@
 
 		raw.push.apply(raw, path);
 
-		for (var i = 0, length = path.length; i < length; i++)
+		for (var i = 0; i < path.length; i++)
 			path[i] = path[i].toLowerCase();
 
 		if (!isRefresh && jR.url.length && jR.prev() !== jR.url) {
@@ -248,18 +248,13 @@
 			}
 		}
 
-		var k = NAME_NAV + 'isback';
+		if (jR.isback !== Internal.$prev.length)
+			SET(NAME_NAV + 'isback', Internal.$prev.length);
 
-		if (jR.isback !== Internal.$prev.length && M.paths[k])
-			SET(k, Internal.$prev.length);
+		if (jR.isforward !== Internal.$next.length)
+			SET(NAME_NAV + 'isforward', Internal.$next.length);
 
-		k = NAME_NAV + 'isforward';
-
-		if (jR.isforward !== Internal.$next.length && M.paths[k])
-			SET(k, Internal.$next.length);
-
-		var length = jR.routes.length;
-		for (var i = 0; i < length; i++) {
+		for (var i = 0; i < jR.routes.length; i++) {
 
 			var route = jR.routes[i];
 			if (!jR._route_compare(path, route.url))
@@ -287,33 +282,24 @@
 		var tmp = jR.url;
 		jR.url = url;
 
-		k = NAME_NAV + 'url';
-
-		if (jR.url !== tmp && M.paths[k])
-			UPD(k);
+		if (jR.url !== tmp)
+			UPD(NAME_NAV + 'url');
 
 		jR.repository = jR.cache[url];
 
-		k = NAME_NAV + 'repository';
-
-		if (M.paths[k])
-			UPD(k);
+		UPD(NAME_NAV + 'repository');
 
 		if (!jR.repository)
 			jR.repository = {};
 
 		jR._params();
 		jR.params = jR._route_param(raw, route);
-
-		k = NAME_NAV + 'params';
-		if (M.paths[k])
-			UPD(k);
+		UPD(NAME_NAV + 'params');
 
 		jR.is404 = false;
 		jR.emit('location', url);
-		length = routes.length;
 
-		for (var i = 0; i < length; i++) {
+		for (var i = 0; i < routes.length; i++) {
 			var route = routes[i];
 
 			if (route.pending)
@@ -464,7 +450,7 @@
 		jR.query = data;
 
 		var p = NAME_NAV + 'query';
-		W.M && W.M.paths[p] && UPD(p);
+		W.M && UPD(p);
 		return jR;
 	};
 
