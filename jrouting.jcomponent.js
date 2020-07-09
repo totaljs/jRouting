@@ -5,7 +5,7 @@
 
 	var jR = {
 		cache: {},
-		version: 5.7,
+		version: 5.8,
 		errors: [],
 		global: {},
 		hashtags: false,
@@ -422,10 +422,8 @@
 	jR._params = function() {
 
 		var data = {};
-		var index = LOC.href.indexOf('?');
 
-		jR.queryraw = index === -1 ? '' : LOC.href.substring(index + 1);
-
+		jR.queryraw = LOC.search.substring(1);
 		var params = jR.queryraw.split('&');
 
 		for (var i = 0; i < params.length; i++) {
