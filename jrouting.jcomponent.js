@@ -397,7 +397,7 @@
 	};
 
 	jR.status = function(code, message) {
-		EMIT(code, message);
+		EMIT(code + '', message);
 		return jR;
 	};
 
