@@ -2,7 +2,7 @@ var JRFU = {};
 var jR = {
 	LIMIT_HISTORY: 100,
 	LIMIT_HISTORY_ERROR: 100,
-	version: 'v3.0.0',
+	version: 'v3.0.1',
 	cache: {},
 	routes: [],
 	history: [],
@@ -412,7 +412,7 @@ jR._params = function() {
 
 	for (var i = 0; i < params.length; i++) {
 
-		var param = params[i].split('=');
+		var param = params[i].replace(/\+/g, '%2B').split('=');
 		if (param.length !== 2)
 			continue;
 
