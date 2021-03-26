@@ -5,7 +5,7 @@
 
 	var jR = {
 		cache: {},
-		version: 5.9,
+		version: 6,
 		errors: [],
 		global: {},
 		hashtags: false,
@@ -428,7 +428,7 @@
 
 		for (var i = 0; i < params.length; i++) {
 
-			var param = params[i].replace(/\+/g, '%2B').split('=');
+			var param = params[i].replace(/\+/g, '%20').split('=');
 			if (param.length !== 2)
 				continue;
 
