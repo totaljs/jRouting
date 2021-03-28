@@ -5,7 +5,7 @@
 
 	var jR = {
 		cache: {},
-		version: 6,
+		version: 7,
 		errors: [],
 		global: {},
 		hashtags: false,
@@ -33,6 +33,11 @@
 	!W.NAVIGATION && (W.NAVIGATION = jR);
 	!W.NAV && (W.NAV = jR);
 	!W.jR && (W.jR = jR);
+
+	jR.custom = function() {
+		jR.$custom = true;
+		CACHEPATH('NAV.url', '1 month');
+	};
 
 	jR.remove = function(url) {
 		url = url.env(true).ROOT(true);
@@ -411,6 +416,9 @@
 			jR.model = model || null;
 			l.hash = url;
 			jR.location(url, false);
+		} else if (jR.$custom) {
+			jR.model = model || null;
+			jR.location(url, false);
 		} else if (history.pushState) {
 			history.pushState(null, null, url);
 			jR.model = model || null;
@@ -528,10 +536,12 @@
 	function jRinit() {
 		$(document).ready(function() {
 
-			if (jR.hashtags)
-				jR.url = LOC.hash || JRFU.path(JRFU.prepareUrl(LOC.pathname));
-			else
-				jR.url = JRFU.path(JRFU.prepareUrl(LOC.pathname));
+			if (!jR.$custom) {
+				if (jR.hashtags)
+					jR.url = LOC.hash || JRFU.path(JRFU.prepareUrl(LOC.pathname));
+				else
+					jR.url = JRFU.path(JRFU.prepareUrl(LOC.pathname));
+			}
 
 			setTimeout(function() {
 				Internal.isReady = true;
@@ -541,7 +551,7 @@
 			$(W).on('hashchange', function() {
 				Internal.isReady && jR.hashtags && jR.location(JRFU.path(LOC.hash));
 			}).on('popstate', function() {
-				if (Internal.isReady && !jR.hashtags) {
+				if (Internal.isReady && !jR.hashtags && !jR.$custom) {
 					var url = JRFU.path(LOC.pathname);
 					jR.url !== url && jR.location(url);
 				}
