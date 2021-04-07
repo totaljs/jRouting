@@ -5,7 +5,7 @@
 
 	var jR = {
 		cache: {},
-		version: 7,
+		version: 8,
 		errors: [],
 		global: {},
 		hashtags: false,
@@ -186,7 +186,7 @@
 		if (length) {
 			for (var i = 0; i < length; i++) {
 				var value = routeUrl[route.params[i]];
-				arr.push(value === '/' ? '' : value);
+				arr.push(value === '/' || (/\{|\}/).test(value) ? '' : value);
 			}
 		}
 
@@ -224,6 +224,11 @@
 
 		if (!Internal.isReady)
 			return;
+
+		if (jR.ready == false) {
+			setTimeout2('jR', jR.refresh, 100);
+			return;
+		}
 
 		var index = url.indexOf('?');
 		if (index !== -1)
@@ -333,12 +338,18 @@
 
 				var l = route.middleware.length;
 				var middleware = [];
+				var current = jR.url;
 
 				for (var j = 0; j < l; j++) {
 					var fn = jR.middlewares[route.middleware[j]];
 					fn && (function(route, fn) {
 						middleware.push(function(next) {
-							fn.call(jR, next, route.options, route.roles, route);
+							if (jR.url !== current) {
+								middleware = null;
+								next = null;
+								route.pending = false;
+							} else
+								fn.call(jR, next, route.options, route.roles, route);
 						});
 					})(route, fn);
 				}
@@ -346,7 +357,8 @@
 				if (!route.init) {
 					route.pending = true;
 					middleware.jRmiddleware(function(err) {
-						!err && route.fn.apply(jR, jR.params);
+						if (jR.url === current)
+							!err && route.fn.apply(jR, jR.params);
 						route.pending = false;
 					}, route);
 					return;
@@ -355,7 +367,8 @@
 				route.pending = true;
 				route.init(function() {
 					middleware.jRmiddleware(function(err) {
-						!err && route.fn.apply(jR, jR.params);
+						if (jR.url === current)
+							!err && route.fn.apply(jR, jR.params);
 						route.pending = false;
 					}, route);
 				});
