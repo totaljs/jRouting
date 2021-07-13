@@ -5,7 +5,7 @@
 
 	var jR = {
 		cache: {},
-		version: 8,
+		version: 9,
 		errors: [],
 		global: {},
 		hashtags: false,
@@ -36,7 +36,7 @@
 
 	jR.custom = function() {
 		jR.$custom = true;
-		CACHEPATH('NAV.url', '1 month');
+		CACHEPATH('NAV.href', '1 month');
 	};
 
 	jR.remove = function(url) {
@@ -230,9 +230,15 @@
 			return;
 		}
 
+		NAV.href = url;
+
 		var index = url.indexOf('?');
-		if (index !== -1)
+		var qs = '';
+
+		if (index !== -1) {
+			qs = url.substring(index);
 			url = url.substring(0, index);
+		}
 
 		url = JRFU.prepareUrl(url);
 		url = JRFU.path(url);
@@ -298,11 +304,12 @@
 		jR.repository = jR.cache[url];
 
 		UPD(NAME_NAV + 'repository');
+		UPD(NAME_NAV + 'href');
 
 		if (!jR.repository)
 			jR.repository = {};
 
-		jR._params();
+		jR._params(qs);
 		jR.params = jR._route_param(raw, route);
 		UPD(NAME_NAV + 'params');
 
@@ -420,9 +427,39 @@
 	};
 
 	W.REDIRECT = NAV.redirect = function(url, model) {
+
 		if (!url)
 			url = jR.url;
+
 		url = url.env(true).ROOT(true);
+
+		if (url.indexOf('./') !== -1) {
+
+			var href = NAV.url;
+			var index = href.indexOf('?');
+
+			var qs = '';
+			if (index !== -1) {
+				qs = href.substring(index);
+				href = href.substring(0, index);
+			}
+
+			if (url === './') {
+				REDIRECT(NAV.url);
+				return;
+			}
+
+			var end = href.charAt(href.length - 1);
+			var count = url.match(/\.\.\//g);
+			var arr = href.split('/').trim();
+			href = '/' + arr.splice(0, arr.length - count.length).join('/');
+			if (href.charAt(href.length - 1) !== '/')
+				href += '/';
+			href += qs;
+			REDIRECT(href);
+			return;
+		}
+
 		var c = url.charCodeAt(0);
 		var l = LOC;
 		if (c === 35) {
@@ -440,11 +477,11 @@
 			l.href = url;
 	};
 
-	jR._params = function() {
+	jR._params = function(qs) {
 
 		var data = {};
 
-		jR.queryraw = LOC.search.substring(1);
+		jR.queryraw = (qs || LOC.search).substring(1);
 		var params = jR.queryraw.split('&');
 
 		for (var i = 0; i < params.length; i++) {
@@ -558,7 +595,7 @@
 
 			setTimeout(function() {
 				Internal.isReady = true;
-				jR.location(jR.url);
+				jR.location(jR.href || jR.url);
 			}, 5);
 
 			$(W).on('hashchange', function() {
