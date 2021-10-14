@@ -5,7 +5,7 @@
 
 	var jR = {
 		cache: {},
-		version: 9,
+		version: 10,
 		errors: [],
 		global: {},
 		hashtags: false,
@@ -63,13 +63,13 @@
 
 	jR.save = function() {
 		try {
-			localStorage.setItem(MAIN.$localstorage + '.nav', STRINGIFY({ prev: Internal.$prev, next: Internal.$next, ts: new Date() }));
+			localStorage.setItem(DEF.localstorage + '.nav', STRINGIFY({ prev: Internal.$prev, next: Internal.$next, ts: new Date() }));
 		} catch (e) {}
 	};
 
 	jR.load = function() {
 		try {
-			var tmp = PARSE(localStorage.getItem(MAIN.$localstorage + '.nav') || 'null');
+			var tmp = PARSE(localStorage.getItem(DEF.localstorage + '.nav') || 'null');
 			if (tmp) {
 				if (tmp.prev instanceof Array)
 					Internal.$prev = jR.history = tmp.prev;
@@ -449,7 +449,6 @@
 				return;
 			}
 
-			var end = href.charAt(href.length - 1);
 			var count = url.match(/\.\.\//g);
 			var arr = href.split('/').trim();
 			href = '/' + arr.splice(0, arr.length - count.length).join('/');
