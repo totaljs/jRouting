@@ -1,16 +1,12 @@
 (function(W) {
 
-	var JRFU = {};
 	var NAME_NAV = 'NAV.';
 
 	var jR = {
 		cache: {},
-		version: 10,
-		errors: [],
-		global: {},
+		version: 11,
 		hashtags: false,
 		middlewares: {},
-		model: null,
 		params: [],
 		query: {},
 		repository: {},
@@ -30,9 +26,7 @@
 	jR.history = Internal.$prev;
 
 	var LOC = location;
-	!W.NAVIGATION && (W.NAVIGATION = jR);
 	!W.NAV && (W.NAV = jR);
-	!W.jR && (W.jR = jR);
 
 	jR.custom = function() {
 		jR.$custom = true;
@@ -46,15 +40,6 @@
 			jR.routes[i].id !== url && routes.push(jR.routes[i]);
 		jR.routes = routes;
 		return jR;
-	};
-
-	jR.on = function(name, fn) {
-		ON(name, fn);
-		return jR;
-	};
-
-	jR.emit = function() {
-		EMIT.apply(W, arguments);
 	};
 
 	jR.autosave = function() {
@@ -80,7 +65,7 @@
 		} catch(e) {}
 	};
 
-	jR.route = function(url, fn, middleware, init) {
+	W.ROUTE = function(url, fn, middleware, init) {
 
 		var tmp;
 
@@ -132,11 +117,11 @@
 		});
 
 		jR.is404 && url === jR.url && W.REDIRECT(url + (jR.queryraw ? '?' + jR.queryraw : ''));
-		jR.emit('route', url);
+		EMIT('route', url);
 		return jR;
 	};
 
-	W.MIDDLEWARE = jR.middleware = function(name, fn) {
+	W.MIDDLEWARE = function(name, fn) {
 
 		if (name instanceof Array) {
 			name.wait(function(item, next) {
@@ -240,8 +225,8 @@
 			url = url.substring(0, index);
 		}
 
-		url = JRFU.prepareUrl(url);
-		url = JRFU.path(url);
+		url = prepareUrl(url);
+		url = jR.path(url);
 
 		var path = jR._route(url);
 		var routes = [];
@@ -314,7 +299,7 @@
 		UPD(NAME_NAV + 'params');
 
 		jR.is404 = false;
-		jR.emit('location', url);
+		EMIT('location', url);
 
 		for (var i = 0; i < routes.length; i++) {
 			var route = routes[i];
@@ -401,22 +386,22 @@
 		return Internal.$next[Internal.$next.length - 1];
 	};
 
-	jR.back = function(model) {
+	jR.back = function() {
 		var url = Internal.$prev.pop() || '/';
 		if (jR.url && jR.next() !== jR.url)
 			Internal.$next.push(jR.url);
 		jR.url = '';
-		W.REDIRECT(url, model);
+		W.REDIRECT(url);
 		jR.$save && jR.save();
 		return jR;
 	};
 
-	jR.forward = function(model) {
+	jR.forward = function() {
 		var url = Internal.$next.pop() || '/';
 		if (jR.url && jR.prev() !== jR.url)
 			Internal.$prev.push(jR.url);
 		jR.url = '';
-		W.REDIRECT(url, model);
+		W.REDIRECT(url);
 		jR.$save && jR.save();
 		return jR;
 	};
@@ -426,7 +411,7 @@
 		return jR;
 	};
 
-	W.REDIRECT = NAV.redirect = function(url, model) {
+	W.REDIRECT = function(url) {
 
 		if (!url)
 			url = jR.url;
@@ -462,15 +447,12 @@
 		var c = url.charCodeAt(0);
 		var l = LOC;
 		if (c === 35) {
-			jR.model = model || null;
 			l.hash = url;
 			jR.location(url, false);
 		} else if (jR.$custom) {
-			jR.model = model || null;
 			jR.location(url, false);
 		} else if (history.pushState) {
 			history.pushState(null, null, url);
-			jR.model = model || null;
 			jR.location(l.pathname + l.search, false);
 		} else
 			l.href = url;
@@ -509,7 +491,7 @@
 		return jR;
 	};
 
-	jR.path = JRFU.path = function (url, d) {
+	jR.path = function (url, d) {
 
 		if (url.substring(0, 1) === '#')
 			return url;
@@ -533,12 +515,12 @@
 		return url + params;
 	};
 
-	JRFU.prepareUrl = function(url) {
+	function prepareUrl(url) {
 		if (url.substring(0, 1) === '#')
 			return url;
 		var index = url.indexOf('#');
 		return index !== -1 ? url.substring(0, index) : url;
-	};
+	}
 
 	Array.prototype.jRmiddleware = function(callback, route) {
 
@@ -587,9 +569,9 @@
 
 			if (!jR.$custom) {
 				if (jR.hashtags)
-					jR.url = LOC.hash || JRFU.path(JRFU.prepareUrl(LOC.pathname));
+					jR.url = LOC.hash || jR.path(prepareUrl(LOC.pathname));
 				else
-					jR.url = JRFU.path(JRFU.prepareUrl(LOC.pathname));
+					jR.url = jR.path(prepareUrl(LOC.pathname));
 			}
 
 			setTimeout(function() {
@@ -598,10 +580,10 @@
 			}, 5);
 
 			$(W).on('hashchange', function() {
-				Internal.isReady && jR.hashtags && jR.location(JRFU.path(LOC.hash));
+				Internal.isReady && jR.hashtags && jR.location(jR.path(LOC.hash));
 			}).on('popstate', function() {
 				if (Internal.isReady && !jR.hashtags && !jR.$custom) {
-					var url = JRFU.path(LOC.pathname);
+					var url = jR.path(LOC.pathname);
 					jR.url !== url && jR.location(url);
 				}
 			});
@@ -620,9 +602,5 @@
 	}
 
 	jR._params();
-
-	W.ROUTE = function(url, fn, middleware, init) {
-		return jR.route(url, fn, middleware, init);
-	};
 
 })(window);
