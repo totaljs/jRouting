@@ -4,7 +4,7 @@
 
 	var jR = {
 		cache: {},
-		version: 11,
+		version: 12,
 		hashtags: false,
 		middlewares: {},
 		params: [],
@@ -28,9 +28,10 @@
 	var LOC = location;
 	!W.NAV && (W.NAV = jR);
 
-	jR.custom = function() {
+	jR.custom = function(expire) {
 		jR.$custom = true;
-		CACHEPATH('NAV.href', '1 month');
+		if (expire == null || expire == true || typeof(expire) === 'string')
+			CACHEPATH('NAV.href', expire == null || expire == true ? '1 month' : expire);
 	};
 
 	jR.remove = function(url) {
