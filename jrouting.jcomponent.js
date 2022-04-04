@@ -412,7 +412,7 @@
 		return jR;
 	};
 
-	W.REDIRECT = function(url) {
+	NAV.redirect = W.REDIRECT = function(url) {
 
 		if (!url)
 			url = jR.url;
