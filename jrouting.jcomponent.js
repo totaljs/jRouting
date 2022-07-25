@@ -422,13 +422,9 @@
 		if (url.indexOf('./') !== -1) {
 
 			var href = NAV.url;
-			var index = href.indexOf('?');
+			var index = url.indexOf('?');
 
-			var qs = '';
-			if (index !== -1) {
-				qs = href.substring(index);
-				href = href.substring(0, index);
-			}
+			var qs = index === -1 ? '' : url.substring(index);
 
 			if (url === './') {
 				REDIRECT(NAV.url);
