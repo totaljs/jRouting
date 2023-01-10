@@ -4,7 +4,7 @@
 
 	var jR = {
 		cache: {},
-		version: 13,
+		version: 14,
 		hashtags: false,
 		middlewares: {},
 		params: [],
@@ -208,15 +208,10 @@
 
 	jR.location = function(url, isRefresh) {
 
-		if (!Internal.isReady)
-			return;
+		if (url)
+			NAV.href = url;
 
-		if (jR.ready == false) {
-			setTimeout2('jR', jR.refresh, 100);
-			return;
-		}
-
-		NAV.href = url;
+		Internal.isReady = true;
 
 		var index = url.indexOf('?');
 		var qs = '';
@@ -572,8 +567,8 @@
 			}
 
 			setTimeout(function() {
-				Internal.isReady = true;
-				jR.location(jR.href || jR.url);
+				if (!Internal.isReady)
+					jR.location(jR.href || jR.url);
 			}, 5);
 
 			$(W).on('hashchange', function() {
