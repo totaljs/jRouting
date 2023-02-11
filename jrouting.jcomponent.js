@@ -4,7 +4,7 @@
 
 	var jR = {
 		cache: {},
-		version: 14,
+		version: 15,
 		hashtags: false,
 		middlewares: {},
 		params: [],
@@ -412,7 +412,7 @@
 		if (!url)
 			url = jR.url;
 
-		url = url.env(true).ROOT(true);
+		url = url.env(true).ROOT(true).flags(null, url, 'redirect');
 
 		if (url.indexOf('./') !== -1) {
 
