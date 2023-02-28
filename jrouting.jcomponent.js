@@ -4,7 +4,7 @@
 
 	var jR = {
 		cache: {},
-		version: 15,
+		version: 16,
 		hashtags: false,
 		middlewares: {},
 		params: [],
@@ -304,6 +304,7 @@
 				continue;
 
 			if (!route.middleware || !route.middleware.length) {
+
 				if (!route.init) {
 					route.fn.apply(jR, jR.params);
 					continue;
@@ -329,7 +330,17 @@
 				var current = jR.url;
 
 				for (var j = 0; j < l; j++) {
-					var fn = jR.middlewares[route.middleware[j]];
+					var m = route.middleware[j];
+
+					// codelist
+					if (m.charAt(0) === '#') {
+						(function(m) {
+							middleware.push(next => CL(m, () => next()));
+						})(m.substring(1));
+						continue;
+					}
+
+					var fn = jR.middlewares[m];
 					fn && (function(route, fn) {
 						middleware.push(function(next) {
 							if (jR.url !== current) {
