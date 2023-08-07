@@ -4,7 +4,7 @@
 
 	var jR = {
 		cache: {},
-		version: 16,
+		version: 16.1,
 		hashtags: false,
 		middlewares: {},
 		params: [],
@@ -117,7 +117,7 @@
 			return a.priority > b.priority ? -1 : a.priority < b.priority ? 1 :0;
 		});
 
-		jR.is404 && (url === jR.url || url.indexOf('{') !== -1) && W.REDIRECT(jR.href);
+		jR.is404 && (url === jR.url || url.indexOf('{') !== -1) && W.REDIRECT(jR.href + location.hash);
 		EMIT('route', url);
 		return jR;
 	};
