@@ -1,11 +1,8 @@
 [![MIT License][license-image]][license-url]
 
-[![Support](https://www.totaljs.com/img/button-support.png)](https://www.totaljs.com/support/)
-
-- [__Live chat with professional support__](https://messenger.totaljs.com)
-- [__HelpDesk with professional support__](https://helpdesk.totaljs.com)
-
 # jRouting
+
+[![Made in EU](https://cdn.componentator.com/eu-small.png)](https://european-union.europa.eu/)
 
 The library supports the HTML 5 History API only. __This plugin is a little big cannon for the web development__. Works only with jQuery.
 
