@@ -4,7 +4,7 @@
 
 	var jR = {
 		cache: {},
-		version: 16.1,
+		version: 16.2,
 		hashtags: false,
 		middlewares: {},
 		params: [],
@@ -423,7 +423,14 @@
 		if (!url)
 			url = jR.url;
 
-		url = url.env(true).ROOT(true).flags(null, url, 'redirect');
+		var nohistory = false;
+
+		url = url.env(true).ROOT(true).replace(/\s(@)?nohistory/i, function() {
+			nohistory = true;
+			return '';
+		});
+
+		url = url.flags(null, url, 'redirect');
 
 		if (url.indexOf('./') !== -1) {
 
@@ -455,7 +462,8 @@
 		} else if (jR.$custom) {
 			jR.location(url, false);
 		} else if (history.pushState) {
-			history.pushState(null, null, url);
+			if (!nohistory)
+				history.pushState(null, null, url);
 			jR.location(l.pathname + l.search, false);
 		} else
 			l.href = url;
