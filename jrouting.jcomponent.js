@@ -3,13 +3,12 @@
 	var NAME_NAV = 'NAV.';
 
 	var jR = {
-		cache: {},
-		version: 16.2,
+		version: 16.3,
 		hashtags: false,
 		middlewares: {},
 		params: [],
 		query: {},
-		repository: {},
+		query2: {},
 		routes: [],
 		url: '',
 		count: 0
@@ -32,6 +31,13 @@
 		jR.$custom = true;
 		if (expire == null || expire == true || typeof(expire) === 'string')
 			CACHEPATH('NAV.href', expire == null || expire == true ? '1 month' : expire);
+	};
+
+	jR.remember = function(name, value) {
+		if (value === null)
+			delete jR.query2[name];
+		else
+			jR.query2[name] = value == undefined ? jR.query[name] : value;
 	};
 
 	jR.remove = function(url) {
@@ -271,24 +277,13 @@
 		var isError = false;
 		var error = [];
 
-		// cache old repository
-
-		if (jR.url.length)
-			jR.cache[jR.url] = jR.repository;
-
 		var tmp = jR.url;
 		jR.url = url;
 
 		if (jR.url !== tmp)
 			UPD(NAME_NAV + 'url');
 
-		jR.repository = jR.cache[url];
-
-		UPD(NAME_NAV + 'repository');
 		UPD(NAME_NAV + 'href');
-
-		if (!jR.repository)
-			jR.repository = {};
 
 		jR._params(qs);
 		jR.params = jR._route_param(raw, route);
@@ -430,6 +425,10 @@
 			return '';
 		});
 
+
+		if (Object.keys(jR.query2).length)
+			url = QUERIFY(url, jR.query2);
+
 		url = url.flags(null, url, 'redirect');
 
 		if (url.indexOf('./') !== -1) {
@@ -570,7 +569,8 @@
 			e.preventDefault();
 			var el = $(this);
 			var url = (el.attr('href') || el.attrd('href') || el.attrd('url'));
-			url !== ('javas' + 'cript:vo' + 'id(0)') && url !== '#' && W.REDIRECT(url);
+			if (url !== ('javas' + 'cript:vo' + 'id(0)') && url !== '#')
+				W.REDIRECT(url);
 		});
 		return jR;
 	};
