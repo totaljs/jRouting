@@ -576,6 +576,9 @@
 	};
 
 	function jRinit() {
+
+		NAV.ua = MAIN.ua;
+
 		$(document).ready(function() {
 
 			if (!jR.$custom) {
