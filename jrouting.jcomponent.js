@@ -189,8 +189,10 @@
 
 		var length = url.length;
 		var skip = length === 1 && url[0] === '/';
+		var wildcard = route.indexOf('*');
 
-		if (route.length !== length)
+		// A wildcard matches the rest of the url: one segment or more
+		if (wildcard === -1 ? route.length !== length : length <= wildcard)
 			return false;
 
 		for (var i = 0; i < length; i++) {
@@ -263,7 +265,8 @@
 			if (!jR._route_compare(path, route.url))
 				continue;
 
-			if (route.url.indexOf('*') === -1)
+			// Only the route "*" alone is a page for 404
+			if (route.url.length !== 1 || route.url[0] !== '*')
 				notfound = false;
 
 			if (route.once && route.count > 0)
@@ -443,9 +446,17 @@
 				return;
 			}
 
-			var count = url.match(/\.\.\//g);
+			// Relative to the current url: ../ goes up, ./ stays, the rest is added (../foo/, ./foo/)
 			var arr = href.split('/').trim();
-			href = '/' + arr.splice(0, arr.length - count.length).join('/');
+			var parts = (index === -1 ? url : url.substring(0, index)).split('/');
+			for (var i = 0; i < parts.length; i++) {
+				var part = parts[i];
+				if (part === '..')
+					arr.pop();
+				else if (part && part !== '.')
+					arr.push(part);
+			}
+			href = '/' + arr.join('/');
 			if (href.charAt(href.length - 1) !== '/')
 				href += '/';
 			href += qs;
@@ -456,13 +467,18 @@
 		var c = url.charCodeAt(0);
 		var l = LOC;
 		if (c === 35) {
+			// With hashtags the event "hashchange" resolves the new hash: once
+			if (jR.hashtags && l.hash !== url) {
+				l.hash = url;
+				return;
+			}
 			l.hash = url;
 			jR.location(url, false);
 		} else if (jR.$custom) {
 			jR.location(url, false);
 		} else if (history.pushState) {
-			if (!nohistory)
-				history.pushState(null, null, url);
+			// @nohistory: it goes to the url without a new entry in the history of the browser
+			history[nohistory ? 'replaceState' : 'pushState'](null, null, url);
 			jR.location(l.pathname + l.search, false);
 		} else
 			l.href = url;
@@ -483,15 +499,14 @@
 
 			var name = decodeURIComponent(param[0]);
 			var value = decodeURIComponent(param[1]);
-			var isArray = data[name] instanceof Array;
 
-			if (data[name] && !isArray)
-				data[name] = [data[name]];
-
-			if (isArray)
+			// A repeated parameter becomes an array of its values
+			if (data[name] === undefined)
+				data[name] = value;
+			else if (data[name] instanceof Array)
 				data[name].push(value);
 			else
-				data[name] = value;
+				data[name] = [data[name], value];
 		}
 
 		jR.query = data;
